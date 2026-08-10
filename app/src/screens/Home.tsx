@@ -1,44 +1,61 @@
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import { useLiveQuery } from 'dexie-react-hooks'
-import { db, setMeta, SCHEMA_VERSION } from '../db'
+import { db, setMeta } from '../db'
+import { shareBackup } from '../lib/backup'
 import { formatDate, today } from '../lib/date'
 import s from './Home.module.css'
 
 /**
  * ホーム画面
  *
- * フェーズ0の時点では、4つの入口はまだ押せない（中身が無いため）。
- * 代わりに「動作確認」の欄を置き、祖父のスマホで
- *   ・保存が効いているか（IndexedDB）
- *   ・電波が無くても開けるか
- * を実機で確かめられるようにしてある。中身ができたらこの欄は外す。
+ * 4つの入口はまだ押せない（中身が無いため）。
+ * 代わりに置いてあるのは「控えを家族に送る」欄で、これは作りかけの仮の欄ではない。
+ * iOSはホーム画面のアイコンを消すと中のデータも消えるため、
+ * 記録を入れ始める前から、いつでも控えを取り出せる状態にしておく必要がある。
  */
 export default function Home() {
-  const [online, setOnline] = useState(navigator.onLine)
+  const [message, setMessage] = useState('')
+  const [busy, setBusy] = useState(false)
 
-  useEffect(() => {
-    const on = () => setOnline(true)
-    const off = () => setOnline(false)
-    window.addEventListener('online', on)
-    window.addEventListener('offline', off)
-    return () => {
-      window.removeEventListener('online', on)
-      window.removeEventListener('offline', off)
+  // 端末に入っている件数と、最後に控えを送った日（画面は自動で更新される）
+  const stat = useLiveQuery(async () => {
+    const [tenants, leases, payments, expenses, notes, photos, lastShareAt] = await Promise.all([
+      db.tenants.count(),
+      db.leases.count(),
+      db.payments.count(),
+      db.expenses.count(),
+      db.notes.count(),
+      db.photos.count(),
+      db.meta.get('lastShareAt'),
+    ])
+    return {
+      records: tenants + leases + payments + expenses + notes,
+      photos,
+      lastShareAt: lastShareAt?.value,
     }
   }, [])
 
-  // 保存されている件数と、最後に保存した時刻（画面は自動で更新される）
-  const rows = useLiveQuery(() => db.meta.toArray(), [], [])
-  const lastSaved = rows.find((r) => r.key === 'lastCheckAt')?.value
-
-  async function handleCheck() {
-    const count = Number(rows.find((r) => r.key === 'checkCount')?.value ?? 0) + 1
-    await setMeta('checkCount', String(count))
-    await setMeta('lastCheckAt', new Date().toLocaleString('ja-JP'))
-    await setMeta('schemaVersion', String(SCHEMA_VERSION))
+  async function handleShare() {
+    setBusy(true)
+    setMessage('')
+    try {
+      const result = await shareBackup()
+      if (result === 'cancelled') {
+        setMessage('送るのをやめました。')
+        return
+      }
+      await setMeta('lastShareAt', today())
+      setMessage(
+        result === 'shared'
+          ? '控えを送りました。'
+          : '控えをこの端末に保存しました。（ダウンロードの中にあります）',
+      )
+    } catch {
+      setMessage('うまくいきませんでした。もう一度お試しください。')
+    } finally {
+      setBusy(false)
+    }
   }
-
-  const count = rows.find((r) => r.key === 'checkCount')?.value ?? '0'
 
   return (
     <div className={s.shell}>
@@ -83,31 +100,38 @@ export default function Home() {
           </button>
         </div>
 
-        <section className={s.check}>
-          <h2 className={s.checkTitle}>動作確認（作っている間だけの欄です）</h2>
-          <p className={s.checkNote}>
-            下のボタンを押して数が増え、アプリを閉じて開き直しても数が残っていれば、
-            この端末に記録を残せる状態になっています。
+        <section className={s.backup}>
+          <h2 className={s.backupTitle}>控えを家族に送る</h2>
+          <p className={s.backupNote}>
+            記録はこのスマホの中だけにあります。
+            機種変更や、ホーム画面からアイコンを消したときに消えてしまわないよう、
+            ときどき控えを家族に送っておいてください。
           </p>
-          <ul className={s.checkList}>
+          <ul className={s.backupList}>
             <li>
-              <span>押した回数</span>
-              <b className="num">{count} 回</b>
+              <span>いまの記録</span>
+              <b className="num">{stat ? `${stat.records} 件` : '…'}</b>
             </li>
             <li>
-              <span>最後に保存した時刻</span>
-              <b className="num">{lastSaved ?? 'まだありません'}</b>
+              <span>写真</span>
+              <b className="num">{stat ? `${stat.photos} 枚` : '…'}</b>
             </li>
             <li>
-              <span>通信</span>
-              <b className={online ? s.online : s.offline}>
-                {online ? 'つながっています' : '電波がありません（表示は続きます）'}
+              <span>最後に送った日</span>
+              <b className="num">
+                {stat?.lastShareAt ? formatDate(stat.lastShareAt) : 'まだ送っていません'}
               </b>
             </li>
           </ul>
-          <button className={s.checkBtn} onClick={handleCheck}>
-            保存してみる
+          <button className={s.backupBtn} onClick={handleShare} disabled={busy}>
+            {busy ? '用意しています…' : '控えを家族に送る'}
           </button>
+          <p className={s.backupResult} role="status" aria-live="polite">
+            {message}
+          </p>
+          <p className={s.backupSmall}>
+            写真は大きいため、控えのファイルには入りません（別に送ります）。
+          </p>
         </section>
       </main>
     </div>

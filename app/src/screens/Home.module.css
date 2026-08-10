@@ -98,51 +98,70 @@
   cursor: not-allowed;
 }
 
-/* --- 動作確認カード（フェーズ0のあいだだけ置く） --- */
-.check {
+/* --- 控えを家族に送る --- */
+.backup {
   margin-top: var(--sp-5);
-  border: var(--border) dashed var(--line-soft);
+  border: var(--border) solid var(--line);
   border-radius: var(--radius);
   padding: var(--sp-4);
 }
-.checkTitle {
+.backupTitle {
   margin: 0 0 var(--sp-2);
-  font-size: var(--fs-lead);
+  font-size: var(--fs-title);
   font-weight: 800;
 }
-.checkNote {
+.backupNote {
   margin: 0 0 var(--sp-3);
   font-size: var(--fs-sub);
   color: var(--ink-2);
-  line-height: 1.7;
+  line-height: 1.8;
 }
-.checkList {
-  margin: 0 0 var(--sp-3);
+.backupList {
+  margin: 0 0 var(--sp-4);
   padding: 0;
   list-style: none;
   font-size: var(--fs-sub);
 }
-.checkList li {
+.backupList li {
   display: flex;
   justify-content: space-between;
   gap: var(--sp-3);
   padding: var(--sp-2) 0;
   border-bottom: 1px solid var(--line-soft);
 }
-.checkList li:last-child { border-bottom: none; }
-.checkList b { font-weight: 800; }
+.backupList li:last-child { border-bottom: none; }
+.backupList b { font-weight: 800; }
 
-.checkBtn {
+.backupBtn {
   display: block;
   width: 100%;
   min-height: var(--tap);
-  border: var(--border) solid var(--brand);
+  padding: var(--sp-2) var(--sp-3);
+  border: var(--border) solid var(--brand-dark);
   border-radius: var(--radius);
-  background: var(--brand-weak);
-  color: var(--brand);
-  font-size: var(--fs-lead);
+  background: var(--brand);
+  color: #fff;
+  font-size: var(--fs-body);
   font-weight: 800;
 }
+.backupBtn:disabled {
+  background: var(--brand-weak);
+  color: var(--brand);
+  cursor: progress;
+}
 
-.online { color: var(--ok); font-weight: 800; }
-.offline { color: var(--warn); font-weight: 800; }
+/* 結果の一行。文が出ても消えても、下の文字が動かないように高さを確保する */
+.backupResult {
+  min-height: calc(var(--fs-lead) * 1.8);
+  margin: var(--sp-3) 0 0;
+  font-size: var(--fs-lead);
+  font-weight: 800;
+  color: var(--ok);
+  line-height: 1.8;
+}
+.backupSmall {
+  margin: var(--sp-2) 0 0;
+  font-size: var(--fs-sub);
+  color: var(--ink-2);
+  line-height: 1.7;
+}

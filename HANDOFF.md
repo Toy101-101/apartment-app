@@ -1,6 +1,6 @@
 # 引き継ぎメモ（現在地）
 
-最終更新: 2026-08-10 / フェーズ0 完了時点
+最終更新: 2026-08-11 / フェーズ1 完了時点
 
 このファイルは「**いま何がどこまでできていて、次に何をするか**」だけを書く。
 なぜそう作るのかは `PLAN.md`、決めごとは `README.md` を見ること。
@@ -9,14 +9,19 @@
 
 ## 1. 現在地
 
-**フェーズ0（土台と公開）まで完了。実機で動く状態で公開済み。**
+**フェーズ1（データ層と控え）まで完了。**
 
 - 公開URL: <https://Toy101-101.github.io/apartment-app/>
 - リポジトリ: <https://github.com/Toy101-101/apartment-app>（**公開**リポジトリ）
-- 確認済み: 画面描画・PWA設定・サービスワーカー稼働・10ファイルのオフライン保存・端末内保存（IndexedDB）の書き込みと自動更新
-- テスト: `app/src/lib/date.test.ts` の17件が、手元でもCI上でも合格
+- フェーズ0で確認済み: 画面描画・PWA設定・サービスワーカー稼働・オフライン保存・端末内保存（IndexedDB）
+- フェーズ1でできたもの:
+  - `app/src/db.ts` — `version(2)` で本体10表（`meta` 含む）。すべて `id`（UUID）で結び、**部屋番号は鍵にしていない**
+  - `app/src/lib/backup.ts` — 控えの書き出し・読み込み。`schemaVersion` 必須、写真はJSONに入れない、共有シート→ダウンロードの順で渡す
+  - `app/src/lib/fixtures/backup-v1.ts` — **版1の控えの固定ファイル（絶対に書き換えない）**
+  - ホームの「動作確認」欄 → **「控えを家族に送る」欄**に置き換え済み
+- テスト: **38件**が手元で合格（`date` 17／`backup` 20／`db`（版上げ）1）
 
-**まだ無いもの**: ①〜④の中身はすべて「準備中」の空ボタン。データの表もまだ `meta` の1つだけ。
+**まだ無いもの**: ①〜④の中身はすべて「準備中」の空ボタン。表は作ったが、まだ1件もデータを入れる画面が無い。
 
 ---
 
@@ -57,8 +62,10 @@ F:\apartment-app\
   README.md          決めごと・開発コマンド
   app\               アプリ本体
     src\lib\date.ts        日付と金額（令和表記・UTCずれ対策）＋ date.test.ts
-    src\db.ts              Dexie。今は meta 表だけ
-    src\screens\Home.tsx   ホーム画面（動作確認欄つき）
+    src\lib\backup.ts      控えの書き出し・読み込み ＋ backup.test.ts
+    src\lib\fixtures\      古い版の控え（固定ファイル。書き換え禁止）
+    src\db.ts              Dexie。version(2) で本体10表 ＋ db.test.ts（版上げの試験）
+    src\screens\Home.tsx   ホーム画面（控えを家族に送る欄つき）
     src\styles\tokens.css  デザイントークン
     vite.config.ts         base と PWA の設定
     public\                アイコン5種（_tmp\make-icons.mjs で生成）
@@ -92,27 +99,37 @@ F:\apartment-app\
 - 日付は `'YYYY-MM-DD'` 文字列で持ち、`parseDate()` で分解する。`new Date('2026-08-25')` はUTC解釈で**日本時間だと1日ずれる**
 - コミットの作者メールは **GitHubの非公開用アドレス**（`315319109+Toy101-101@users.noreply.github.com`）。公開リポジトリに実アドレスを残さないため
 
+**対処済み（フェーズ1で追加）**
+- **iOSはホーム画面のアイコンを消すとデータも消える** → ホームに「控えを家族に送る」を常設した
+- File System Access API は **iOS Safariで動かない** → `navigator.canShare({files})` を見て共有シート、だめならダウンロード
+- 控えJSONに **`schemaVersion` を必ず入れる** → `backup.ts` の `MIGRATIONS` で1段ずつ形を直して読む。
+  **一度書いた移行手順は絶対に消さない**（消すとその版の古い控えが二度と読めなくなる）
+- 写真（Blob）は控えJSONに入れない → 枚数（`photoCount`）だけ書き、控えを読み込んでも端末の写真は消さない
+
 **これから当たる**
-- **iOSはホーム画面のアイコンを消すとデータも消える** → 控えの共有を早く作る
-- File System Access API は **iOS Safariで動かない** → `navigator.share` とダウンロードのフォールバック前提
 - 音声認識はネット接続が必要、iOS Safariは1分ほどで自動終了 → `onend` で再開する
 - 写真は `createImageBitmap(file, {imageOrientation:'from-image'})` で向きを直し、長辺1600px・品質0.8に圧縮してから保存する
 - 控えJSONに写真を入れない（base64で1.33倍に膨らむ）
 
 ---
 
-## 6. 次にやること（フェーズ1・3〜4日分）
+## 6. 次にやること（フェーズ2・5日分）
 
-**データを守る仕組みを、データより先に作る。**
+**②家賃の入金**（一番よく使う画面）。表はもう出来ているので、画面から作る。
 
-1. `app/src/db.ts` に本体の表を足す（`version(2)`。既存データは消さない）
-   `rooms / tenants / leases / rentTerms / payments / paymentLog / expenses / photos / notes`
-   ※ 表の設計は `PLAN.md`「データ設計」を必ず参照。**部屋番号をキーにしない**（入居者が変わると過去が読めなくなる）
-2. `app/src/lib/backup.ts` — 控えの書き出し・読み込み。**`schemaVersion` を必ず入れる**
-3. `app/src/lib/backup.test.ts` — **書き出す → 読み込む → 完全一致**のテスト。古い形式のJSONを固定ファイルで持ち、毎回読めることも確認
-4. ホームの「動作確認」欄を、**控えの書き出しボタン**に置き換える
+1. 見本データを入れる手立て（開発用。実データは祖父の端末にだけ入れる）
+2. 月ごとの一覧 — 部屋ごとに「済／未」を1タップで切替。`payments` に `leaseId` ＋ `month` で1行
+   - 家賃の額は `rentTerms` から、その月に適用される行を選んで出す（`fromMonth` の一番新しいもの）
+3. 入金日の記録／操作履歴（`paymentLog`）／**取り消し5秒**
+4. 去年まで遡れる月送り（`shiftMonth` が `date.ts` にある）
+5. `renewalLevel` `unpaidRooms`（`mockup.html` で検証済み）を `src/lib/` に移し、金額ベースにする
 
-そのあと: フェーズ2（②家賃の入金）→ 3（①契約）→ 4（③修繕＋音声＋写真）→ 5（④空室）→ 6（共有・印刷）
+そのあと: フェーズ3（①契約）→ 4（③修繕＋音声＋写真）→ 5（④空室）→ 6（共有・印刷）
+
+**まだ作っていない控えまわり**（フェーズ6で仕上げる）
+- 控えの**読み込み画面**。関数（`importBackupJson`）はあるが、ファイルを選ぶ画面がまだ無い
+- 写真をJSONと一緒に送る（`navigator.share({ files: [json, ...photos] })`）
+- 読める1枚（印刷用）
 
 ---
 
@@ -121,7 +138,7 @@ F:\apartment-app\
 ```
 cd F:\apartment-app\app
 F:\Claude\npm.cmd install     （node_modules が無い場合のみ）
-F:\Claude\npm.cmd run test    （17件通ることを確認）
+F:\Claude\npm.cmd run test    （38件通ることを確認）
 F:\Claude\npm.cmd run dev     （http://localhost:5173/apartment-app/ で開く）
 ```
 
