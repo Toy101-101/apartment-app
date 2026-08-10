@@ -1,0 +1,688 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>アパート管理｜画面デザイン見本</title>
+<style>
+/* ===========================================================
+   デザイン基準（高齢者向け）
+   - 本文20px以上 / ボタン高さ64px以上 / 白背景・濃い文字
+   - 色だけで意味を伝えない（必ず文字ラベルを併記）
+   =========================================================== */
+:root{
+  --ink:#1a1a1a;          /* 文字 */
+  --ink-sub:#4a4a4a;      /* 補足文字 */
+  --line:#c9c9c9;         /* 枠線 */
+  --bg:#f2f2f0;           /* 画面外の背景 */
+  --card:#ffffff;
+  --green:#1b7f3b;        /* 入居中・入金済み */
+  --green-bg:#e6f4ea;
+  --orange:#c25400;       /* 空室 */
+  --orange-bg:#fdf0e3;
+  --red:#c62828;          /* 要注意・未入金 */
+  --red-bg:#fdeaea;
+  --yellow:#8a6100;       /* 更新が近い */
+  --yellow-bg:#fdf6e0;
+  --gray:#5a5a5a;         /* 退去予定 */
+  --gray-bg:#ededed;
+  --blue:#12508c;         /* 主要ボタン */
+  --blue-bg:#e8f0f8;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+html,body{margin:0;padding:0;}
+body{
+  background:var(--bg);
+  color:var(--ink);
+  font-family:system-ui,-apple-system,"Hiragino Kaku Gothic ProN","Yu Gothic",Meiryo,sans-serif;
+  font-size:20px;
+  line-height:1.6;
+}
+#app{
+  max-width:520px;margin:0 auto;min-height:100vh;
+  background:var(--card);
+  box-shadow:0 0 24px rgba(0,0,0,.12);
+}
+
+/* ---------- ヘッダー（常に「今どこにいるか」を表示） ---------- */
+header{
+  position:sticky;top:0;z-index:10;
+  display:flex;align-items:center;gap:8px;
+  min-height:72px;padding:8px 12px;
+  background:var(--blue);color:#fff;
+}
+header .title{
+  flex:1;text-align:center;font-size:24px;font-weight:700;
+  padding-right:8px;
+}
+.backbtn{
+  min-width:104px;min-height:56px;
+  font-size:19px;font-weight:700;
+  background:#fff;color:var(--blue);
+  border:none;border-radius:10px;cursor:pointer;
+  font-family:inherit;
+}
+.backbtn:active{background:#dde8f3;}
+.backbtn.hidden{visibility:hidden;}
+
+main{padding:16px 16px 48px;}
+
+/* ---------- 共通パーツ ---------- */
+h2{font-size:26px;margin:0 0 12px;}
+.lead{font-size:19px;color:var(--ink-sub);margin:0 0 16px;}
+.bigbtn{
+  display:block;width:100%;min-height:88px;
+  margin-bottom:14px;padding:14px 18px;
+  font-size:26px;font-weight:700;text-align:left;
+  background:var(--blue-bg);color:var(--ink);
+  border:3px solid var(--blue);border-radius:14px;cursor:pointer;
+  font-family:inherit;
+}
+.bigbtn:active{background:#cfe0ef;}
+.bigbtn .sub{display:block;font-size:18px;font-weight:400;color:var(--ink-sub);margin-top:2px;}
+.bigbtn .num{float:right;font-size:22px;}
+
+.card{
+  width:100%;text-align:left;font-family:inherit;
+  display:block;background:var(--card);
+  border:2px solid var(--line);border-radius:14px;
+  padding:14px 16px;margin-bottom:14px;
+  font-size:20px;color:var(--ink);cursor:pointer;
+}
+.card:active{background:#f4f4f4;}
+.card .row1{display:flex;align-items:baseline;gap:12px;}
+.card .roomno{font-size:26px;font-weight:700;min-width:70px;}
+.card .name{font-size:23px;font-weight:700;flex:1;}
+.card .meta{font-size:18px;color:var(--ink-sub);margin-top:4px;}
+.card .arrow{color:var(--blue);font-weight:700;font-size:24px;}
+
+.badge{
+  display:inline-block;padding:4px 12px;border-radius:8px;
+  font-size:18px;font-weight:700;border:2px solid;
+}
+.b-green{color:var(--green);background:var(--green-bg);border-color:var(--green);}
+.b-orange{color:var(--orange);background:var(--orange-bg);border-color:var(--orange);}
+.b-red{color:var(--red);background:var(--red-bg);border-color:var(--red);}
+.b-yellow{color:var(--yellow);background:var(--yellow-bg);border-color:var(--yellow);}
+.b-gray{color:var(--gray);background:var(--gray-bg);border-color:var(--gray);}
+
+.card.alert-red{border-color:var(--red);background:var(--red-bg);border-width:3px;}
+.card.alert-yellow{border-color:var(--yellow);background:var(--yellow-bg);border-width:3px;}
+
+/* ---------- お知らせ ---------- */
+.notice{
+  border:3px solid var(--line);border-radius:14px;
+  padding:12px 14px;margin-bottom:22px;background:#fafafa;
+}
+.notice h3{margin:0 0 10px;font-size:21px;}
+.notice-btn{
+  display:block;width:100%;min-height:72px;margin-bottom:10px;
+  padding:10px 14px;text-align:left;font-family:inherit;
+  font-size:21px;font-weight:700;border-radius:12px;cursor:pointer;border:3px solid;
+}
+.notice-btn:last-child{margin-bottom:0;}
+.notice-btn .arrow{float:right;}
+.notice-ok{font-size:20px;color:var(--green);font-weight:700;margin:0;}
+
+/* ---------- 詳細画面 ---------- */
+.detail-head{
+  border:3px solid var(--line);border-radius:14px;
+  padding:14px 16px;margin-bottom:18px;text-align:center;
+}
+.detail-head .roomno{font-size:34px;font-weight:700;}
+.detail-head .name{font-size:26px;font-weight:700;margin-top:2px;}
+dl.fields{margin:0 0 20px;border-top:2px solid var(--line);}
+dl.fields div{
+  display:flex;gap:12px;padding:12px 4px;border-bottom:2px solid var(--line);
+}
+dl.fields dt{width:34%;flex:none;color:var(--ink-sub);font-size:19px;margin:0;}
+dl.fields dd{margin:0;flex:1;font-size:21px;font-weight:700;}
+
+.memo{
+  border:3px solid var(--blue);border-radius:14px;background:#fbfcfe;
+  padding:14px 16px;margin-bottom:20px;
+}
+.memo h3{margin:0 0 8px;font-size:22px;color:var(--blue);}
+.memo p{margin:0;font-size:20px;line-height:1.8;}
+
+/* ---------- 家賃入金 ---------- */
+.monthbar{display:flex;align-items:center;gap:8px;margin-bottom:18px;}
+.monthbar button{
+  min-width:72px;min-height:64px;font-size:26px;font-weight:700;
+  background:var(--blue-bg);color:var(--blue);
+  border:3px solid var(--blue);border-radius:12px;cursor:pointer;font-family:inherit;
+}
+.monthbar .label{flex:1;text-align:center;font-size:26px;font-weight:700;}
+
+.payrow{
+  display:flex;align-items:center;gap:12px;
+  border:2px solid var(--line);border-radius:14px;
+  padding:10px 12px;margin-bottom:12px;
+}
+.payrow .who{flex:1;min-width:0;}
+.payrow .who .roomno{font-size:23px;font-weight:700;}
+.payrow .who .name{font-size:19px;color:var(--ink-sub);}
+.payrow .who .rent{font-size:19px;}
+.paytoggle{
+  min-width:148px;min-height:76px;
+  font-size:22px;font-weight:700;border-radius:12px;cursor:pointer;
+  border:3px solid;font-family:inherit;
+}
+.pay-yes{background:var(--green-bg);color:var(--green);border-color:var(--green);}
+.pay-no{background:var(--red-bg);color:var(--red);border-color:var(--red);}
+.payrow.vacant{background:#f7f7f7;}
+.payrow .vacantnote{
+  min-width:148px;text-align:center;font-size:19px;color:var(--ink-sub);font-weight:700;
+}
+.summary{
+  border:3px solid var(--line);border-radius:14px;background:#fafafa;
+  padding:14px 16px;margin-top:18px;font-size:21px;
+}
+.summary .big{font-size:27px;font-weight:700;}
+.summary .warn{color:var(--red);font-weight:700;}
+
+/* ---------- タブ ---------- */
+.tabs{display:flex;gap:10px;margin-bottom:16px;}
+.tabs button{
+  flex:1;min-height:66px;font-size:21px;font-weight:700;
+  border:3px solid var(--blue);border-radius:12px;cursor:pointer;
+  background:#fff;color:var(--blue);font-family:inherit;
+}
+.tabs button[aria-pressed="true"]{background:var(--blue);color:#fff;}
+
+/* ---------- 空室タイル ---------- */
+.tiles{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+.tile{
+  border:3px solid;border-radius:14px;padding:12px 10px;
+  text-align:center;cursor:pointer;font-family:inherit;
+}
+.tile .no{font-size:30px;font-weight:700;display:block;}
+.tile .st{font-size:21px;font-weight:700;display:block;margin:4px 0 2px;}
+.tile .sub{font-size:17px;display:block;opacity:.95;}
+.t-green{border-color:var(--green);background:var(--green-bg);color:var(--green);}
+.t-orange{border-color:var(--orange);background:var(--orange-bg);color:var(--orange);}
+.t-gray{border-color:var(--gray);background:var(--gray-bg);color:var(--gray);}
+
+/* ---------- 入力フォーム ---------- */
+.field{margin-bottom:22px;}
+.field > label,.field .flabel{display:block;font-size:21px;font-weight:700;margin-bottom:8px;}
+.field .hint{font-size:18px;color:var(--ink-sub);margin:0 0 8px;}
+.choices{display:flex;flex-wrap:wrap;gap:10px;}
+.choices button{
+  min-height:64px;min-width:96px;padding:8px 16px;
+  font-size:20px;font-weight:700;font-family:inherit;
+  border:3px solid var(--blue);border-radius:12px;background:#fff;color:var(--blue);cursor:pointer;
+}
+.choices button[aria-pressed="true"]{background:var(--blue);color:#fff;}
+.choices.rooms button{min-width:0;flex:0 0 calc(33.333% - 7px);}
+input[type="number"],input[type="date"],textarea{
+  width:100%;font-family:inherit;font-size:24px;
+  padding:14px;border:3px solid var(--line);border-radius:12px;color:var(--ink);background:#fff;
+}
+textarea{font-size:20px;line-height:1.7;min-height:150px;}
+input:focus,textarea:focus,button:focus-visible{outline:4px solid #f2a900;outline-offset:2px;}
+.savebtn{
+  display:block;width:100%;min-height:84px;font-size:26px;font-weight:700;
+  background:var(--green);color:#fff;border:none;border-radius:14px;cursor:pointer;font-family:inherit;
+}
+.savebtn:active{background:#166630;}
+.subbtn{
+  display:block;width:100%;min-height:72px;margin-top:14px;
+  font-size:21px;font-weight:700;font-family:inherit;
+  background:#fff;color:var(--ink-sub);border:3px solid var(--line);border-radius:14px;cursor:pointer;
+}
+.addbtn{
+  display:block;width:100%;min-height:80px;margin-bottom:18px;
+  font-size:23px;font-weight:700;font-family:inherit;
+  background:var(--green-bg);color:var(--green);
+  border:3px solid var(--green);border-radius:14px;cursor:pointer;
+}
+
+/* ---------- 見本の注記・トースト ---------- */
+.mocknote{
+  margin-top:28px;padding:12px 14px;border:2px dashed var(--line);border-radius:12px;
+  font-size:17px;color:var(--ink-sub);line-height:1.7;
+}
+#toast{
+  position:fixed;left:50%;bottom:28px;transform:translateX(-50%);
+  background:#1a1a1a;color:#fff;font-size:21px;font-weight:700;
+  padding:14px 26px;border-radius:12px;z-index:50;
+  opacity:0;pointer-events:none;transition:opacity .18s;
+  max-width:90vw;text-align:center;
+}
+#toast.show{opacity:.96;}
+</style>
+</head>
+<body>
+<div id="app">
+  <header>
+    <button class="backbtn hidden" id="backbtn" onclick="goBack()">← もどる</button>
+    <div class="title" id="headertitle">アパート管理</div>
+  </header>
+  <main id="main"></main>
+</div>
+<div id="toast" role="status" aria-live="polite"></div>
+
+<script>
+/* ============================================================
+   ※これは画面デザインの見本です。
+     データは見本用の固定値で、保存はされません（再読み込みで戻ります）。
+   ============================================================ */
+
+// 見本の「今日」。実装時は new Date() に置き換える。
+const TODAY = new Date(2026, 7, 10); // 2026-08-10
+
+const BUILDING = "さくらハイツ";
+
+const ROOMS = [
+  { no:"101", status:"occupied", name:"田中 一郎", kana:"たなか いちろう", phone:"090-1234-5678",
+    moveIn:"2018-04-01", renewal:"2026-08-25", rent:55000, kanri:3000, deposit:110000, reikin:55000,
+    guarantor:"田中 幸子（妻）090-1234-9999",
+    note:"最初の入居者さん。長く住んでもらっているので、2022年の更新のときに家賃を2,000円下げた（57,000→55,000）。\nゴミ出しの当番をいつも手伝ってくれる。困りごとがあると一番に電話をくれるので、こちらからも様子を聞くようにしている。" },
+  { no:"102", status:"vacant", vacantSince:"2026-06-30", rent:57000, kanri:3000,
+    note:"前の入居者（大学生）が卒業で退去。給湯器を新品に交換済みなので、募集のときは「給湯器新品」と出すこと。\n不動産の○○さんに募集をお願いしている。" },
+  { no:"103", status:"occupied", name:"佐藤 花子", kana:"さとう はなこ", phone:"080-2222-3333",
+    moveIn:"2021-10-01", renewal:"2026-09-30", rent:62000, kanri:3000, deposit:124000, reikin:62000,
+    guarantor:"佐藤 健（長男）080-2222-1111",
+    note:"角部屋で日当たりが良いぶん、家賃を他より高めに設定している。\n入金が数日遅れることがあるが、これまで必ず月内に入っている。催促の電話はしないでよい、と本人と話がついている。" },
+  { no:"104", status:"occupied", name:"鈴木 健太", kana:"すずき けんた", phone:"090-4444-5555",
+    moveIn:"2024-03-15", renewal:"2027-03-31", rent:58000, kanri:3000, deposit:116000, reikin:58000,
+    guarantor:"鈴木 正夫（父）0120-000-000",
+    note:"不動産屋さんの紹介で入居。ペット不可の物件だが、金魚のみ相談のうえで許可している（口約束なので記録として残す）。" },
+  { no:"105", status:"occupied", name:"中村 良子", kana:"なかむら りょうこ", phone:"090-6666-7777",
+    moveIn:"2019-09-05", renewal:"2026-10-05", rent:56000, kanri:3000, deposit:112000, reikin:0,
+    guarantor:"中村 明（弟）090-6666-1111",
+    note:"知人の紹介のため礼金はもらっていない。\n耳が少し遠いので、連絡は電話よりも訪問か手紙のほうが確実。" },
+  { no:"201", status:"occupied", name:"山本 みどり", kana:"やまもと みどり", phone:"080-8888-9999",
+    moveIn:"2023-01-15", renewal:"2027-01-15", rent:60000, kanri:3000, deposit:120000, reikin:60000,
+    guarantor:"（保証会社）□□保証 0120-111-222",
+    note:"保証会社を使っている最初の部屋。滞納があれば保証会社に連絡すればよい。契約書は茶封筒の一番上。" },
+  { no:"202", status:"occupied", name:"高橋 悟", kana:"たかはし さとる", phone:"090-1111-2222",
+    moveIn:"2022-06-01", renewal:"2026-11-30", rent:57000, kanri:3000, deposit:114000, reikin:57000,
+    guarantor:"高橋 良江（母）0000-00-0000",
+    note:"夜勤の仕事のため、日中は寝ていることが多い。訪ねるなら夕方以降がよい。\n入金は毎月25日ごろの手渡しが多いので、月末までは待つ。" },
+  { no:"203", status:"vacant", vacantSince:"2026-08-01", rent:58000, kanri:3000,
+    note:"退去したばかり。エアコンは本体が古く、次の入居までに交換するか検討中（2026年6月にガス補充で一度対応済み）。" },
+  { no:"204", status:"occupied", name:"伊藤 陽子", kana:"いとう ようこ", phone:"080-3333-4444",
+    moveIn:"2025-05-01", renewal:"2028-04-30", rent:61000, kanri:3000, deposit:122000, reikin:61000,
+    guarantor:"伊藤 誠（夫）080-3333-1111",
+    note:"リフォーム後の最初の入居者。壁紙を張り替えたぶん、家賃を3,000円上げて募集した（58,000→61,000）。それでもすぐ決まったので、次の部屋も同じようにしてよい。" },
+  { no:"205", status:"leaving", name:"小林 大輔", kana:"こばやし だいすけ", phone:"090-5555-6666",
+    moveIn:"2020-11-01", renewal:"2026-10-31", rent:59000, kanri:3000, deposit:118000, reikin:59000,
+    guarantor:"小林 一雄（父）0000-11-1111", leaveDate:"2026-09-30",
+    note:"転勤のため2026年9月30日で退去予定。退去の連絡は2026年7月20日に電話で受けた。\n敷金は畳の傷み具合を見てから精算する約束。" }
+];
+
+// 家賃の入金状況（"YYYY-MM" → { 部屋番号: true=入金あり }）
+const PAYMENTS = {
+  "2026-08": { "101":true, "103":false, "104":true, "105":true, "201":true, "202":false, "204":true, "205":true },
+  "2026-07": { "101":true, "103":true, "104":true, "105":true, "201":true, "202":true, "204":true, "205":true }
+};
+
+const EXPENSES = [
+  { id:1, date:"2026-08-02", target:"建物全体", kind:"固定費", title:"火災保険（1年分）", amount:43000,
+    vendor:"○○損害保険",
+    note:"毎年8月に1年分をまとめて払っている。月払いにすると総額が高くなるので一括にした。\n証書は仏間の茶封筒に入っている。" },
+  { id:2, date:"2026-07-18", target:"102号室", kind:"修繕", title:"給湯器の交換", amount:128000,
+    vendor:"山田設備（0000-11-2222）",
+    note:"前の入居者から「お湯の出が悪い」と何度か言われていた。修理では直らないと山田さんに言われたので、退去のタイミングに合わせて新品に交換した。\n募集のときに「給湯器新品」と出せるほうが早く決まると考えた。保証は5年。" },
+  { id:3, date:"2026-07-05", target:"共用部", kind:"修繕", title:"外階段の塗り直し", amount:85000,
+    vendor:"○○塗装",
+    note:"雨のあと手すりの錆が目立ってきたため。前回の塗り直しは2019年で、6〜7年ごとが目安。\n○○塗装さんは先代からの付き合いで安くしてくれるので、塗装はいつもここに頼んでいる。" },
+  { id:4, date:"2026-06-20", target:"203号室", kind:"修繕", title:"エアコンのガス補充", amount:22000,
+    vendor:"街の電気屋",
+    note:"入居者から「冷えない」と連絡があった。ガス補充で直ったが、本体は2011年製であと2〜3年で交換が必要と言われている。\n次に空いたときに新品へ交換するつもり。" },
+  { id:5, date:"2026-06-01", target:"共用部", kind:"固定費", title:"共用部の電気代（5月分）", amount:8400,
+    vendor:"電力会社（口座引落）",
+    note:"廊下と階段の照明。2023年にLEDへ替えてから、月8千円前後で落ち着いている。" }
+];
+
+/* ---------------- 便利な関数 ---------------- */
+const yen = n => "¥" + n.toLocaleString("ja-JP");
+const parseDate = s => { const p = s.split("-").map(Number); return new Date(p[0], p[1]-1, p[2]); };
+const daysUntil = s => Math.round((parseDate(s) - TODAY) / 86400000);
+const jpDate = s => { const d = parseDate(s); return d.getFullYear() + "年" + (d.getMonth()+1) + "月" + d.getDate() + "日"; };
+const mdDate = s => { const d = parseDate(s); return (d.getMonth()+1) + "月" + d.getDate() + "日"; };
+const monthKey = d => d.getFullYear() + "-" + String(d.getMonth()+1).padStart(2,"0");
+const jpMonth = k => { const p = k.split("-"); return p[0] + "年" + Number(p[1]) + "月分"; };
+
+function renewalLevel(room){                 // 契約更新の警告レベル
+  if (room.status === "vacant") return null;
+  const d = daysUntil(room.renewal);
+  if (d <= 30) return { lv:"red",    text:"あと" + d + "日で契約更新", badge:"b-red" };
+  if (d <= 60) return { lv:"yellow", text:"あと" + d + "日で契約更新", badge:"b-yellow" };
+  return { lv:"none", text:"次の更新まで あと" + d + "日", badge:"b-green" };
+}
+function payMap(key){
+  if (!PAYMENTS[key]) {
+    const past = key < monthKey(TODAY);
+    PAYMENTS[key] = {};
+    ROOMS.forEach(r => { if (r.status !== "vacant") PAYMENTS[key][r.no] = past; });
+  }
+  return PAYMENTS[key];
+}
+function unpaidRooms(key){
+  const m = payMap(key);
+  return ROOMS.filter(r => r.status !== "vacant" && !m[r.no]);
+}
+function toast(msg){
+  const t = document.getElementById("toast");
+  t.textContent = msg; t.classList.add("show");
+  clearTimeout(t._timer);
+  t._timer = setTimeout(() => t.classList.remove("show"), 1800);
+}
+function esc(s){ return String(s).replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;"}[c])); }
+function nl2br(s){ return esc(s).split("\n").join("<br>"); }
+
+/* ---------------- 画面の切り替え ---------------- */
+const stack = [];                  // 画面の履歴（「もどる」用）
+const state = { payMonth: monthKey(TODAY), expTab:"すべて", form:{} };
+const SCREENS = {};
+
+function show(name, param){ stack.push({ name:name, param:param }); draw(); }
+function goBack(){ if (stack.length > 1) { stack.pop(); draw(); } }
+function draw(){
+  const cur = stack[stack.length-1];
+  const s = SCREENS[cur.name];
+  document.getElementById("headertitle").textContent = s.title(cur.param);
+  document.getElementById("backbtn").classList.toggle("hidden", stack.length <= 1);
+  document.getElementById("main").innerHTML = s.render(cur.param);
+  window.scrollTo(0,0);
+}
+
+/* ============================================================
+   0. ホーム
+   ============================================================ */
+SCREENS.home = {
+  title: () => "アパート管理",
+  render: function(){
+    const soon = ROOMS.filter(r => { const l = renewalLevel(r); return l && (l.lv === "red" || l.lv === "yellow"); });
+    const unpaid = unpaidRooms(state.payMonth);
+    const vacant = ROOMS.filter(r => r.status === "vacant");
+
+    let notice = '<div class="notice"><h3>' + (TODAY.getMonth()+1) + "月" + TODAY.getDate() + '日（今日）のお知らせ</h3>';
+    if (soon.length === 0 && unpaid.length === 0) {
+      notice += '<p class="notice-ok">◎ いま急ぎの用事はありません</p>';
+    } else {
+      if (soon.length) notice += '<button class="notice-btn b-yellow" onclick="show(\'contracts\')">'
+        + "⚠ 契約の更新が近い部屋　" + soon.length + '件 <span class="arrow">›</span></button>';
+      if (unpaid.length) notice += '<button class="notice-btn b-red" onclick="show(\'payments\')">'
+        + "⚠ 家賃がまだの部屋　" + unpaid.length + '件 <span class="arrow">›</span></button>';
+    }
+    notice += "</div>";
+
+    return '<h2>' + BUILDING + '</h2>'
+      + '<p class="lead">全' + ROOMS.length + "部屋　入居 " + (ROOMS.length - vacant.length) + "／空室 " + vacant.length + '</p>'
+      + notice
+      + '<button class="bigbtn" onclick="show(\'contracts\')">① 入居者・契約 <span class="num">›</span>'
+      + '<span class="sub">住んでいる人と、契約の更新日を見る</span></button>'
+      + '<button class="bigbtn" onclick="show(\'payments\')">② 家賃の入金 <span class="num">›</span>'
+      + '<span class="sub">入った・まだ を大きなボタンで記録する</span></button>'
+      + '<button class="bigbtn" onclick="show(\'expenses\')">③ 修繕・費用 <span class="num">›</span>'
+      + '<span class="sub">直した費用と、その理由を残す</span></button>'
+      + '<button class="bigbtn" onclick="show(\'vacancy\')">④ 空室の状況 <span class="num">›</span>'
+      + '<span class="sub">部屋ごとの空き具合を色で見る</span></button>'
+      + '<button class="subbtn" onclick="toast(\'見本のため、書き出しはまだできません\')">📁 データを書き出す（バックアップ）</button>'
+      + '<p class="mocknote">これは画面デザインの見本です。表示されている名前・金額はすべて架空のもので、'
+      + 'ボタンを押しても実際には保存されません（画面を読み込み直すと元に戻ります）。</p>';
+  }
+};
+
+/* ============================================================
+   1. 入居者・契約 一覧
+   ============================================================ */
+SCREENS.contracts = {
+  title: () => "① 入居者・契約",
+  render: function(){
+    const rank = r => {
+      if (r.status === "vacant") return 3;
+      const lv = renewalLevel(r).lv;
+      return lv === "red" ? 0 : lv === "yellow" ? 1 : 2;
+    };
+    const list = ROOMS.slice().sort((a,b) => rank(a) - rank(b) || a.no.localeCompare(b.no));
+
+    const cards = list.map(r => {
+      if (r.status === "vacant") {
+        return '<button class="card" onclick="show(\'contractDetail\',\'' + r.no + '\')">'
+          + '<div class="row1"><span class="roomno">' + r.no + '</span>'
+          + '<span class="name"><span class="badge b-orange">空室</span></span>'
+          + '<span class="arrow">›</span></div>'
+          + '<div class="meta">' + jpDate(r.vacantSince) + 'から空室　募集中</div></button>';
+      }
+      const l = renewalLevel(r);
+      const cls = l.lv === "red" ? "card alert-red" : l.lv === "yellow" ? "card alert-yellow" : "card";
+      const mark = (l.lv === "red" || l.lv === "yellow") ? "⚠ " : "";
+      return '<button class="' + cls + '" onclick="show(\'contractDetail\',\'' + r.no + '\')">'
+        + '<div class="row1"><span class="roomno">' + r.no + '</span>'
+        + '<span class="name">' + esc(r.name) + '</span><span class="arrow">›</span></div>'
+        + '<div class="meta">更新日 ' + jpDate(r.renewal) + '　家賃 ' + yen(r.rent) + '</div>'
+        + '<div style="margin-top:8px"><span class="badge ' + l.badge + '">' + mark + l.text + '</span></div></button>';
+    }).join("");
+
+    return '<p class="lead">部屋を押すと、契約の内容といきさつが見られます。<br>'
+      + '<span style="color:var(--red);font-weight:700">赤＝1か月以内に更新</span>／'
+      + '<span style="color:var(--yellow);font-weight:700">黄＝2か月以内に更新</span></p>' + cards;
+  }
+};
+
+/* ============================================================
+   2. 契約 詳細
+   ============================================================ */
+SCREENS.contractDetail = {
+  title: no => no + "号室",
+  render: function(no){
+    const r = ROOMS.find(x => x.no === no);
+    if (r.status === "vacant") {
+      const days = -daysUntil(r.vacantSince);
+      return '<div class="detail-head"><div class="roomno">' + r.no + '号室</div>'
+        + '<div style="margin-top:8px"><span class="badge b-orange">空室（募集中）</span></div></div>'
+        + '<dl class="fields">'
+        + '<div><dt>空室になった日</dt><dd>' + jpDate(r.vacantSince) + '</dd></div>'
+        + '<div><dt>空いている期間</dt><dd>' + days + '日</dd></div>'
+        + '<div><dt>募集家賃</dt><dd>' + yen(r.rent) + '</dd></div>'
+        + '<div><dt>管理費</dt><dd>' + yen(r.kanri) + '</dd></div>'
+        + '</dl>'
+        + '<div class="memo"><h3>この部屋のいきさつメモ</h3><p>' + nl2br(r.note) + '</p></div>'
+        + '<button class="subbtn" onclick="toast(\'見本のため、まだ編集はできません\')">✎ この内容を書きかえる</button>';
+    }
+    const l = renewalLevel(r);
+    const leaving = r.status === "leaving"
+      ? '<div style="margin-top:8px"><span class="badge b-gray">' + mdDate(r.leaveDate) + 'に退去予定</span></div>' : "";
+    return '<div class="detail-head"><div class="roomno">' + r.no + '号室</div>'
+      + '<div class="name">' + esc(r.name) + '</div>'
+      + '<div style="font-size:18px;color:var(--ink-sub)">' + esc(r.kana) + '</div>'
+      + '<div style="margin-top:10px"><span class="badge ' + l.badge + '">' + l.text + '</span></div>'
+      + leaving + '</div>'
+      + '<dl class="fields">'
+      + '<div><dt>電話番号</dt><dd>' + r.phone + '</dd></div>'
+      + '<div><dt>入居した日</dt><dd>' + jpDate(r.moveIn) + '</dd></div>'
+      + '<div><dt>契約更新日</dt><dd>' + jpDate(r.renewal) + '</dd></div>'
+      + '<div><dt>家賃</dt><dd>' + yen(r.rent) + '</dd></div>'
+      + '<div><dt>管理費</dt><dd>' + yen(r.kanri) + '</dd></div>'
+      + '<div><dt>敷金</dt><dd>' + yen(r.deposit) + '</dd></div>'
+      + '<div><dt>礼金</dt><dd>' + (r.reikin ? yen(r.reikin) : "なし") + '</dd></div>'
+      + '<div><dt>保証人</dt><dd style="font-size:19px">' + esc(r.guarantor) + '</dd></div>'
+      + '</dl>'
+      + '<div class="memo"><h3>契約のいきさつメモ</h3><p>' + nl2br(r.note) + '</p></div>'
+      + '<button class="subbtn" onclick="toast(\'見本のため、まだ編集はできません\')">✎ この内容を書きかえる</button>';
+  }
+};
+
+/* ============================================================
+   3. 家賃の入金
+   ============================================================ */
+function shiftMonth(diff){
+  const p = state.payMonth.split("-").map(Number);
+  state.payMonth = monthKey(new Date(p[0], p[1] - 1 + diff, 1));
+  draw();
+}
+function togglePay(no){
+  const m = payMap(state.payMonth);
+  m[no] = !m[no];
+  draw();
+  toast(no + "号室を「" + (m[no] ? "入金あり" : "まだ") + "」にしました");
+}
+SCREENS.payments = {
+  title: () => "② 家賃の入金",
+  render: function(){
+    const key = state.payMonth;
+    const m = payMap(key);
+    const rows = ROOMS.map(r => {
+      if (r.status === "vacant") {
+        return '<div class="payrow vacant"><div class="who"><span class="roomno">' + r.no + '</span>'
+          + '<div class="name">空室のため なし</div></div><div class="vacantnote">—</div></div>';
+      }
+      const paid = m[r.no];
+      return '<div class="payrow"><div class="who">'
+        + '<span class="roomno">' + r.no + '</span> <span class="name">' + esc(r.name) + '</span>'
+        + '<div class="rent">' + yen(r.rent + r.kanri) + '</div></div>'
+        + '<button class="paytoggle ' + (paid ? "pay-yes" : "pay-no") + '" onclick="togglePay(\'' + r.no + '\')">'
+        + (paid ? "✓ 入金あり" : "✗ まだ") + '</button></div>';
+    }).join("");
+
+    const total = ROOMS.filter(r => r.status !== "vacant" && m[r.no])
+                       .reduce((s,r) => s + r.rent + r.kanri, 0);
+    const un = unpaidRooms(key);
+
+    return '<div class="monthbar">'
+      + '<button onclick="shiftMonth(-1)" aria-label="前の月">◀</button>'
+      + '<div class="label">' + jpMonth(key) + '</div>'
+      + '<button onclick="shiftMonth(1)" aria-label="次の月">▶</button></div>'
+      + '<p class="lead">ボタンを1回押すだけで切りかえられます。押しまちがえても、もう一度押せば元に戻ります。</p>'
+      + rows
+      + '<div class="summary">入っているお金：<span class="big">' + yen(total) + '</span><br>'
+      + (un.length === 0
+          ? '<span style="color:var(--green);font-weight:700">◎ この月はすべて入金されています</span>'
+          : '<span class="warn">まだの部屋：' + un.length + '件（' + un.map(r => r.no + "号室").join("・") + '）</span>')
+      + '</div>';
+  }
+};
+
+/* ============================================================
+   4. 修繕・費用 一覧
+   ============================================================ */
+function setExpTab(t){ state.expTab = t; draw(); }
+SCREENS.expenses = {
+  title: () => "③ 修繕・費用",
+  render: function(){
+    const list = EXPENSES
+      .filter(e => state.expTab === "すべて" || e.kind === state.expTab)
+      .slice().sort((a,b) => b.date.localeCompare(a.date));
+    const tabs = ["すべて","修繕","固定費"].map(t =>
+      '<button aria-pressed="' + (state.expTab === t) + '" onclick="setExpTab(\'' + t + '\')">' + t + '</button>').join("");
+    const cards = list.map(e => {
+      const firstLine = e.note.split("\n")[0];
+      const preview = firstLine.length > 24 ? firstLine.slice(0,24) + "…" : firstLine;
+      return '<button class="card" onclick="show(\'expenseDetail\',' + e.id + ')">'
+        + '<div class="row1"><span class="name">' + esc(e.title) + '</span><span class="arrow">›</span></div>'
+        + '<div class="meta">' + jpDate(e.date) + '　' + esc(e.target) + '　'
+        + '<span class="badge ' + (e.kind === "修繕" ? "b-orange" : "b-gray") + '" style="font-size:16px">' + e.kind + '</span></div>'
+        + '<div style="font-size:26px;font-weight:700;margin-top:6px">' + yen(e.amount) + '</div>'
+        + '<div class="meta" style="margin-top:6px">📝 ' + esc(preview) + '</div></button>';
+    }).join("");
+    const total = list.reduce((s,e) => s + e.amount, 0);
+
+    return '<div class="tabs">' + tabs + '</div>'
+      + '<button class="addbtn" onclick="show(\'expenseNew\')">＋ 新しく記録する</button>'
+      + cards
+      + '<div class="summary">この一覧の合計：<span class="big">' + yen(total) + '</span></div>';
+  }
+};
+
+/* ============================================================
+   5. 費用 詳細（「なぜそうしたか」が主役）
+   ============================================================ */
+SCREENS.expenseDetail = {
+  title: () => "費用の記録",
+  render: function(id){
+    const e = EXPENSES.find(x => x.id === id);
+    return '<div class="detail-head">'
+      + '<div style="font-size:22px">' + jpDate(e.date) + '</div>'
+      + '<div class="name">' + esc(e.title) + '</div>'
+      + '<div class="roomno" style="color:var(--orange)">' + yen(e.amount) + '</div></div>'
+      + '<div class="memo"><h3>なぜ、この対応をしたか</h3><p>' + nl2br(e.note) + '</p></div>'
+      + '<dl class="fields">'
+      + '<div><dt>対象</dt><dd>' + esc(e.target) + '</dd></div>'
+      + '<div><dt>種類</dt><dd>' + e.kind + '</dd></div>'
+      + '<div><dt>頼んだ先</dt><dd style="font-size:19px">' + esc(e.vendor) + '</dd></div>'
+      + '<div><dt>支払った日</dt><dd>' + jpDate(e.date) + '</dd></div>'
+      + '</dl>'
+      + '<button class="subbtn" onclick="toast(\'見本のため、まだ編集はできません\')">✎ この内容を書きかえる</button>';
+  }
+};
+
+/* ============================================================
+   6. 費用の新規登録（入力の見本）
+   ============================================================ */
+function pick(group, value){ state.form[group] = value; draw(); }
+SCREENS.expenseNew = {
+  title: () => "新しく記録する",
+  render: function(){
+    const f = state.form;
+    const btn = (group, t) => '<button aria-pressed="' + (f[group] === t) + '" onclick="pick(\'' + group + '\',\'' + t + '\')">' + t + '</button>';
+    const dateBtns = ["今日","昨日","日付を選ぶ"].map(t => btn("date", t)).join("");
+    const kindBtns = ["修繕","固定費"].map(t => btn("kind", t)).join("");
+    const targetBtns = ["共用部","建物全体"].concat(ROOMS.map(r => r.no)).map(t => btn("target", t)).join("");
+
+    return '<p class="lead">できるだけ、ボタンを押すだけで入力できるようにしています。</p>'
+      + '<div class="field"><span class="flabel">1. いつのことですか</span>'
+      + '<div class="choices">' + dateBtns + '</div>'
+      + (f.date === "日付を選ぶ" ? '<div style="margin-top:10px"><input type="date" value="2026-08-10"></div>' : "")
+      + '</div>'
+      + '<div class="field"><span class="flabel">2. どこですか</span>'
+      + '<div class="choices rooms">' + targetBtns + '</div></div>'
+      + '<div class="field"><span class="flabel">3. 種類</span>'
+      + '<div class="choices">' + kindBtns + '</div></div>'
+      + '<div class="field"><label for="amt">4. 金額（円）</label>'
+      + '<input id="amt" type="number" inputmode="numeric" placeholder="128000"></div>'
+      + '<div class="field"><label for="memo">5. なぜ、この対応をしましたか</label>'
+      + '<p class="hint">あとで見る家族が、いちばん知りたいところです。'
+      + '思い出せることを、話すように書いてください。空欄でもかまいません。</p>'
+      + '<textarea id="memo" placeholder="例）お湯の出が悪いと言われていた。修理では直らないと業者に言われたので、退去のタイミングで新品に交換した。"></textarea></div>'
+      + '<button class="savebtn" onclick="toast(\'見本のため、まだ保存はされません\'); goBack();">この内容で記録する</button>'
+      + '<button class="subbtn" onclick="goBack()">やめる</button>';
+  }
+};
+
+/* ============================================================
+   7. 空室の状況
+   ============================================================ */
+const STATUS_VIEW = {
+  occupied:{ cls:"t-green",  label:"入居中" },
+  vacant:  { cls:"t-orange", label:"空室"   },
+  leaving: { cls:"t-gray",   label:"退去予定" }
+};
+SCREENS.vacancy = {
+  title: () => "④ 空室の状況",
+  render: function(){
+    const tiles = ROOMS.map(r => {
+      const v = STATUS_VIEW[r.status];
+      let sub;
+      if (r.status === "vacant") sub = mdDate(r.vacantSince) + "から";
+      else if (r.status === "leaving") sub = mdDate(r.leaveDate) + "まで";
+      else sub = r.name;
+      return '<button class="tile ' + v.cls + '" onclick="show(\'contractDetail\',\'' + r.no + '\')">'
+        + '<span class="no">' + r.no + '</span>'
+        + '<span class="st">' + v.label + '</span>'
+        + '<span class="sub">' + esc(sub) + '</span></button>';
+    }).join("");
+    const c = s => ROOMS.filter(r => r.status === s).length;
+
+    return '<div class="summary" style="margin:0 0 18px">'
+      + '入居中 <span class="big">' + c("occupied") + '</span> ／ '
+      + '空室 <span class="big" style="color:var(--orange)">' + c("vacant") + '</span> ／ '
+      + '退去予定 <span class="big" style="color:var(--gray)">' + c("leaving") + '</span></div>'
+      + '<div class="tiles">' + tiles + '</div>'
+      + '<p class="lead" style="margin-top:18px">'
+      + '<span class="badge b-green">入居中</span> '
+      + '<span class="badge b-orange">空室</span> '
+      + '<span class="badge b-gray">退去予定</span><br>'
+      + '部屋を押すと、その部屋の詳しい内容が見られます。</p>';
+  }
+};
+
+/* ---------------- 起動 ---------------- */
+show("home");
+</script>
+</body>
+</html>

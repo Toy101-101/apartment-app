@@ -1,0 +1,104 @@
+/* =========================================================================
+   デザイントークン
+   A案の構造 ＋ C案の寸法・コントラスト ＋ B案の言葉づかい
+   - 文字サイズは全て rem（端末の文字拡大に追随させるため px を使わない）
+   - 押せる場所は最小 64px
+   ========================================================================= */
+:root {
+  /* --- 色（C案の高コントラスト ＋ A案の紺） --- */
+  --bg: #ffffff;
+  --surface: #ffffff;
+  --ink: #000000;
+  --ink-2: #333333;
+  --line: #111111;        /* 主要な区切り線（太く濃く） */
+  --line-soft: #c9cdd4;   /* 補助的な線 */
+
+  --brand: #00417a;
+  --brand-weak: #e7f0fa;
+  --brand-dark: #002b52;
+
+  --ok: #12603a;          /* 済・入居中 */
+  --ok-weak: #e4f3ea;
+  --warn: #8a4200;        /* 更新が近い */
+  --warn-weak: #fbf0de;
+  --danger: #a4160e;      /* 未・要対応 */
+  --danger-weak: #fbe9e7;
+  --teal: #0a5561;        /* 空室 */
+  --teal-weak: #e2f1f4;
+
+  /* --- 文字（最小 17px = 1.0625rem。これを下回らない） --- */
+  --fs-sub: 1.0625rem;    /* 17px 補足 */
+  --fs-lead: 1.1875rem;   /* 19px 説明文 */
+  --fs-body: 1.25rem;     /* 20px 本文 */
+  --fs-title: 1.4375rem;  /* 23px 見出し */
+  --fs-big: 1.5rem;       /* 24px 大見出し */
+  --fs-huge: 2rem;        /* 32px 数字 */
+
+  /* --- 余白（8pxグリッド） --- */
+  --sp-1: 4px;
+  --sp-2: 8px;
+  --sp-3: 12px;
+  --sp-4: 16px;
+  --sp-5: 24px;
+  --sp-6: 32px;
+
+  /* --- 形 --- */
+  --tap: 64px;            /* 押せる場所の最小の高さ */
+  --radius: 12px;
+  --border: 3px;
+
+  --font: -apple-system, BlinkMacSystemFont, 'Hiragino Kaku Gothic ProN',
+    'Noto Sans JP', 'Yu Gothic UI', Meiryo, sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+  -webkit-tap-highlight-color: transparent;
+}
+
+html {
+  /* ユーザーが端末の文字サイズを大きくしたら、それに従う */
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--font);
+  font-size: var(--fs-body);
+  line-height: 1.6;
+}
+
+/* 金額・日付の数字は桁を揃える */
+.num {
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: 'tnum';
+}
+
+/* --- 押せるものの共通の作法 -------------------------------------------
+   :active（押した瞬間）と :focus-visible（キーボード操作）は必ず定義する。
+   反応が無いと「押せていない」と判断されて何度も押されるため。
+   ------------------------------------------------------------------- */
+button {
+  font-family: inherit;
+  font-size: var(--fs-body);
+  color: inherit;
+  cursor: pointer;
+}
+button:active {
+  transform: scale(0.98);
+  filter: brightness(0.94);
+}
+button:focus-visible,
+a:focus-visible,
+input:focus-visible,
+textarea:focus-visible {
+  outline: 4px solid #f2a900;
+  outline-offset: 2px;
+}
+@media (prefers-reduced-motion: reduce) {
+  button:active {
+    transform: none;
+  }
+}

@@ -1,0 +1,148 @@
+/* ホーム画面（A案の構造・C案の寸法） */
+
+.shell {
+  max-width: 520px;
+  margin: 0 auto;
+  min-height: 100dvh;
+  background: var(--surface);
+}
+
+/* --- 上のバー：いつも「今どこにいるか」を出す --- */
+.bar {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  min-height: 72px;
+  padding: var(--sp-2) var(--sp-3);
+  padding-top: calc(var(--sp-2) + env(safe-area-inset-top));
+  background: var(--brand);
+  color: #fff;
+  border-bottom: 4px solid var(--brand-dark);
+}
+.barTitle {
+  flex: 1;
+  text-align: center;
+  font-size: var(--fs-title);
+  font-weight: 800;
+}
+
+.body {
+  padding: var(--sp-4) var(--sp-4) var(--sp-6);
+}
+
+/* --- お知らせ --- */
+.notice {
+  border: var(--border) solid var(--line);
+  border-radius: var(--radius);
+  padding: var(--sp-3) var(--sp-4);
+  margin-bottom: var(--sp-5);
+}
+.noticeHead {
+  font-size: var(--fs-sub);
+  color: var(--ink-2);
+  margin: 0 0 var(--sp-2);
+}
+.noticeCalm {
+  font-size: var(--fs-body);
+  font-weight: 700;
+  color: var(--ok);
+  margin: 0;
+}
+
+/* --- 4つの入口（2列） --- */
+.grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--sp-3);
+}
+.tile {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  min-height: 150px;
+  padding: var(--sp-4) var(--sp-3) var(--sp-3);
+  border: none;
+  border-radius: var(--radius);
+  color: #fff;
+  text-align: left;
+}
+.tileNo {
+  font-size: var(--fs-sub);
+  font-weight: 800;
+  opacity: 0.9;
+}
+.tileName {
+  display: block;
+  font-size: var(--fs-big);
+  font-weight: 800;
+  line-height: 1.3;
+  margin-top: var(--sp-1);
+  /* 「入居者・契 約」のような不自然な折り返しを避ける */
+  word-break: auto-phrase;
+}
+.tileSub {
+  display: block;
+  font-size: var(--fs-sub);
+  margin-top: var(--sp-1);
+  opacity: 0.95;
+}
+.t1 { background: var(--brand); }
+.t2 { background: var(--ok); }
+.t3 { background: var(--warn); }
+.t4 { background: var(--teal); }
+
+.tile:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+/* --- 動作確認カード（フェーズ0のあいだだけ置く） --- */
+.check {
+  margin-top: var(--sp-5);
+  border: var(--border) dashed var(--line-soft);
+  border-radius: var(--radius);
+  padding: var(--sp-4);
+}
+.checkTitle {
+  margin: 0 0 var(--sp-2);
+  font-size: var(--fs-lead);
+  font-weight: 800;
+}
+.checkNote {
+  margin: 0 0 var(--sp-3);
+  font-size: var(--fs-sub);
+  color: var(--ink-2);
+  line-height: 1.7;
+}
+.checkList {
+  margin: 0 0 var(--sp-3);
+  padding: 0;
+  list-style: none;
+  font-size: var(--fs-sub);
+}
+.checkList li {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--sp-3);
+  padding: var(--sp-2) 0;
+  border-bottom: 1px solid var(--line-soft);
+}
+.checkList li:last-child { border-bottom: none; }
+.checkList b { font-weight: 800; }
+
+.checkBtn {
+  display: block;
+  width: 100%;
+  min-height: var(--tap);
+  border: var(--border) solid var(--brand);
+  border-radius: var(--radius);
+  background: var(--brand-weak);
+  color: var(--brand);
+  font-size: var(--fs-lead);
+  font-weight: 800;
+}
+
+.online { color: var(--ok); font-weight: 800; }
+.offline { color: var(--warn); font-weight: 800; }

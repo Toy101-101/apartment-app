@@ -1,0 +1,19 @@
+# 依存ライブラリ（npm install で復元できるので保存しない）
+node_modules/
+
+# ビルド結果（GitHubが自動で作る）
+dist/
+dist-ssr/
+*.local
+
+# 一時ファイル置き場
+_tmp/
+
+# 個人情報を絶対に載せないための保険
+# （入居者データの控えJSONを、うっかりここに置いても送信されないようにする）
+*.backup.json
+data/
+控え*.json
+
+.DS_Store
+Thumbs.db
