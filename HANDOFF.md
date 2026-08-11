@@ -1,6 +1,6 @@
 # 引き継ぎメモ（現在地）
 
-最終更新: 2026-08-11 / フェーズ4 完了時点
+最終更新: 2026-08-11 / フェーズ5 完了時点
 
 このファイルは「**いま何がどこまでできていて、次に何をするか**」だけを書く。
 なぜそう作るのかは `PLAN.md`、決めごとは `README.md` を見ること。
@@ -9,7 +9,7 @@
 
 ## 1. 現在地
 
-**フェーズ4（③修繕・費用 ＋ 音声入力 ＋ 写真）まで完了。残るは ④空室 と 共有・印刷 だけ。**
+**フェーズ5（④空室の状況）まで完了。①〜④の中身がすべて揃った。残るはフェーズ6（共有・印刷・仕上げ）だけ。**
 
 - 公開URL: <https://Toy101-101.github.io/apartment-app/>
 - リポジトリ: <https://github.com/Toy101-101/apartment-app>（**公開**リポジトリ）
@@ -36,11 +36,15 @@
   - `components/VoiceMemo.tsx` ＋ `lib/speech.ts` — 🎤押して話す。**契約のいきさつメモにも入れてある**
   - `components/PhotoPicker.tsx` ＋ `lib/photos.ts` — 向きを直して長辺1600px・品質0.8に圧縮してから保存
   - ホーム — ③のタイルが押せる（件数つき）
-- テスト: **162件**が手元で合格
+- フェーズ5: **④空室の状況**
+  - `screens/Vacancy.tsx` — 部屋のタイル一覧（入居中／空室／退去予定）と、それぞれの室数
+  - `lib/vacancy.ts` — **契約から毎回そのつど導き出す。`status` の欄は持たない**
+  - ホーム — ④のタイルに「空室◯室」／「すべて入居中」
+- テスト: **179件**が手元で合格
   （`date` 20／`backup` 20／`rent` 22／`contracts` 35／`payments` 13／`expenses` 18／
-  　`photos` 15／`speech` 7／`sample` 12／`db` 2）
+  　`photos` 15／`vacancy` 17／`speech` 7／`sample` 12／`db` 2）
 
-**まだ無いもの**: ④空室の状況（「準備中」の空ボタン）と、控えの画面・印刷。
+**まだ無いもの**: 控えの画面と印刷（フェーズ6）。①〜④の入口はすべて押せる。
 
 ---
 
@@ -97,6 +101,7 @@ F:\apartment-app\
     src\lib\expenses.ts    修繕・費用 ＋ expenses.test.ts
     src\lib\photos.ts      写真の圧縮と保存 ＋ photos.test.ts
     src\lib\speech.ts      音声入力 ＋ speech.test.ts
+    src\lib\vacancy.ts     空室の導出（入力を持たない）＋ vacancy.test.ts
     src\lib\sample.ts      架空の見本データ ＋ sample.test.ts（入れるボタンは画面から外した）
     src\lib\backup.ts      控えの書き出し・読み込み ＋ backup.test.ts（いまは画面から呼んでいない）
     src\lib\fixtures\      古い版の控え（固定ファイル。書き換え禁止）
@@ -110,6 +115,7 @@ F:\apartment-app\
     src\screens\Expenses.tsx        ③ 一覧
     src\screens\ExpenseDetail.tsx   ③ 詳細（なぜそうしたか・写真）
     src\screens\ExpenseForm.tsx     ③ 記録と書きかえ（音声・写真つき）
+    src\screens\Vacancy.tsx         ④ 空室の状況
     src\styles\tokens.css  デザイントークン
     vite.config.ts         base と PWA の設定
     public\                アイコン5種（_tmp\make-icons.mjs で生成）
@@ -174,25 +180,36 @@ F:\apartment-app\
 - 選んだ写真は「保存」を押すまで端末に書かない → 途中でやめた写真がゴミとして残らない
 - `URL.createObjectURL` は画面を離れるとき必ず `revokeObjectURL`（解放しないとメモリを食い続ける）
 
+**対処済み（フェーズ5で追加）**
+- **空室の判定は月ではなく日で見る**（`isActiveOn`）。月だけで見ると、8月5日に退去した部屋を
+  8月11日に「まだ入居中」と出してしまう。②家賃の入金は月単位（`isActiveIn`）でよいので、2つある
+- ④は入力を持たない。契約を直せば空室表示も自動でついてくる
+
 **これから当たる**
 - **iOSはホーム画面のアイコンを消すとデータも消える** → 控えの画面はフェーズ6。それまでは実データを入れすぎない
 - 写真が増えると控えの共有が重くなる → JSONと写真を分けて `navigator.share({files})` に渡す
 
 ---
 
-## 6. 次にやること（フェーズ5・2〜3日分）
+## 6. 次にやること（フェーズ6・3〜4日分／最後）
 
-**④空室の状況**。**契約データから自動で導き出すだけ**で、独立した入力は持たない（二重管理をなくす）。
+**共有・印刷・仕上げ。** 作る機能はもう無い。**残した記録を、家族が受け取れる形にする**のが最後の仕事。
 
-1. タイル一覧（部屋番号を並べ、入居中／空室／退去予定で色を変える）
-   - 入居中 = その日に生きている契約がある（`isActiveIn` が `lib/rent.ts` にある）
-   - 空室 = 契約が無い。いつから空いているかは、前の契約の終わり（`movedOutOn ?? endDate`）から出す
-   - 退去予定 = `movedOutOn` が未来の契約
-2. タイルを押したら、入居中はその契約へ、空室は前の入居者の記録へ飛ばす
-3. ホームの ④ タイルに「空室◯室」を出す
-4. **`status` という欄を作らないこと。** 作った瞬間に契約と食い違いはじめる
+1. **控えの画面** — `lib/backup.ts` に関数は全部ある（`createBackup` / `toJson` / `shareBackup` /
+   `parseBackup` / `importBackupJson`）。画面をつなぐだけ
+   - 書き出し（家族に送る）と、読み込み（別の端末で開く）。最終送信日を出す
+   - **フェーズ1で作ったあと、ユーザー判断で画面から外した経緯がある**（→ 第2節）。
+     いま戻すかどうかは、必ず本人に確認してから決めること
+2. **写真もいっしょに送る** — `navigator.share({ files: [控えJSON, ...写真] })`。
+   写真はJSONに入れない決まりなので、ファイルとして並べて渡す
+3. **印刷（読める1枚）** — 入居者・家賃・連絡先・保証人を1枚に。`@media print` で作る。
+   紙で持っておきたい、という需要がいちばん強いのはここ
+4. **仕上げ** — 実機で幅375px・文字サイズ最大、機内モードで起動、
+   1年ぶんくらいデータを入れても重くならないか
 
-そのあと: フェーズ6（共有・印刷・仕上げ）
+**フェーズ6が終わったら v1 完成。** そのあとは `PLAN.md`「後で足す（v2以降）」を見ること。
+とくに「**この建物のあゆみ（年表）**」は、記録が積み上がって見える形なので、
+アーカイブという目的にいちばん近い。
 
 **フェーズ6でやる控えまわり**
 - 控えの書き出し・読み込みの**画面**（関数は `lib/backup.ts` にもうある）
@@ -206,7 +223,7 @@ F:\apartment-app\
 ```
 cd F:\apartment-app\app
 F:\Claude\npm.cmd install     （node_modules が無い場合のみ）
-F:\Claude\npm.cmd run test    （162件通ることを確認）
+F:\Claude\npm.cmd run test    （179件通ることを確認）
 F:\Claude\npm.cmd run dev     （http://localhost:5173/apartment-app/ で開く）
 ```
 

@@ -46,6 +46,17 @@ export function isActiveIn(lease: Lease, month: string): boolean {
   return monthOf(lease.startDate) <= month && month <= end
 }
 
+/**
+ * その日に契約が生きているか（日にちまで見る）。
+ *
+ * 空室の判定には、月ではなく日で見なければならない。
+ * 8月5日に退去した部屋を、8月11日に「まだ入居中」と出してしまうため。
+ */
+export function isActiveOn(lease: Lease, day: string): boolean {
+  if (!alive(lease)) return false
+  return lease.startDate <= day && day <= (lease.movedOutOn ?? lease.endDate)
+}
+
 /** 契約更新の近さ。30日以内は赤、60日以内は黄 */
 export type RenewalLevel = 'red' | 'yellow' | 'none'
 

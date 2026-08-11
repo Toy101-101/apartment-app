@@ -1,0 +1,94 @@
+/* ④ 空室の状況 */
+
+.note {
+  margin: var(--sp-4) 0;
+  font-size: var(--fs-lead);
+  color: var(--ink-2);
+  line-height: 1.8;
+}
+
+/* --- いちばん上の数 --- */
+.summary {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--sp-2);
+  border: var(--border) solid var(--line);
+  border-radius: var(--radius);
+  padding: var(--sp-3);
+  margin-bottom: var(--sp-4);
+  text-align: center;
+}
+.summary div {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-1);
+}
+.summary b {
+  font-size: var(--fs-huge);
+  font-weight: 800;
+  line-height: 1.1;
+}
+.summary span {
+  font-size: var(--fs-sub);
+  color: var(--ink-2);
+}
+.occupied { color: var(--ok); }
+.vacant { color: var(--teal); }
+.leaving { color: var(--ink-2); }
+
+/* --- 部屋のタイル --- */
+.tiles {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--sp-3);
+}
+.tile {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-1);
+  min-height: 116px;
+  padding: var(--sp-3);
+  border: var(--border) solid;
+  border-radius: var(--radius);
+  text-decoration: none;
+}
+.tile:active { filter: brightness(0.96); }
+
+/* 入居中は静かに、空室を強く（動かすべきは空いている部屋のほう） */
+.tile.occupied {
+  border-color: var(--ok);
+  background: var(--ok-weak);
+  color: var(--ok);
+}
+.tile.vacant {
+  border-color: var(--teal);
+  background: var(--teal);
+  color: #fff;
+}
+.tile.leaving {
+  border-color: var(--line-soft);
+  background: #f6f7f8;
+  color: var(--ink-2);
+}
+
+.no {
+  font-size: var(--fs-big);
+  font-weight: 800;
+  line-height: 1.1;
+}
+.state {
+  font-size: var(--fs-lead);
+  font-weight: 800;
+}
+.sub {
+  font-size: var(--fs-sub);
+  line-height: 1.5;
+  word-break: auto-phrase;
+}
+
+.lead {
+  margin: var(--sp-4) 0 0;
+  font-size: var(--fs-sub);
+  color: var(--ink-2);
+  line-height: 1.8;
+}

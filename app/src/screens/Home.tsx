@@ -6,6 +6,7 @@ import { buildContractRows, needsAttention, renewalText } from '../lib/contracts
 import { formatDate, formatMonth, today, yen } from '../lib/date'
 import { buildMonthRows, summarize, thisMonth } from '../lib/rent'
 import { hasSampleData, removeSample } from '../lib/sample'
+import { buildVacancyRows, countStates } from '../lib/vacancy'
 import s from './Home.module.css'
 
 /**
@@ -33,6 +34,7 @@ export default function Home() {
       money: summarize(buildMonthRows({ month, rooms, leases, tenants, rentTerms, payments })),
       renewals: needsAttention(buildContractRows({ leases, rooms, tenants, rentTerms })),
       expenses: expenses.filter((e) => !e.deletedAt).length,
+      vacant: countStates(buildVacancyRows({ rooms, leases, tenants })).vacant,
       sample,
     }
   }, [month])
@@ -116,13 +118,19 @@ export default function Home() {
               </span>
             </span>
           </Link>
-          <button className={`${s.tile} ${s.t4}`} disabled>
+          <Link className={`${s.tile} ${s.t4}`} to="/vacancy">
             <span className={s.tileNo}>④</span>
             <span>
               <span className={s.tileName}>空室の状況</span>
-              <span className={s.tileSub}>準備中</span>
+              <span className={s.tileSub}>
+                {view
+                  ? view.vacant === 0
+                    ? 'すべて入居中'
+                    : `空室 ${view.vacant}室`
+                  : '…'}
+              </span>
             </span>
-          </button>
+          </Link>
         </div>
 
         {/* 見本を入れた端末にだけ出る。消せば二度と出ない */}
