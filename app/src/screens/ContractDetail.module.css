@@ -84,9 +84,18 @@
   font-weight: 700;
   text-align: right;
 }
+/* 電話番号は押すとかかる。押せる場所は64pxを下回らない */
 .list a {
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--tap);
+  padding: 0 var(--sp-3);
+  border: 2px solid var(--brand);
+  border-radius: var(--radius);
+  background: var(--brand-weak);
   color: var(--brand);
   font-weight: 800;
+  text-decoration: none;
 }
 
 /* --- 家賃 --- */
