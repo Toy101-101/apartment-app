@@ -29,8 +29,8 @@
   - `lib/contracts.ts` — 上のすべての土台。**上書きしない**決まりごとはここに集約
   - `components/Screen.tsx` `components/Field.tsx` — 画面の外枠と入力欄（3画面で共通）
   - ホーム — 未入金に加えて**更新が近い契約**も出す。①②のタイルが押せる
-- テスト: **120件**が手元で合格
-  （`date` 20／`backup` 20／`rent` 22／`contracts` 31／`payments` 13／`sample` 12／`db` 2）
+- テスト: **124件**が手元で合格
+  （`date` 20／`backup` 20／`rent` 22／`contracts` 35／`payments` 13／`sample` 12／`db` 2）
 
 **まだ無いもの**: ③修繕・費用 と ④空室の状況 は「準備中」の空ボタン。音声入力と写真もまだ。
 
@@ -141,6 +141,10 @@ F:\apartment-app\
   → 保存の前に `db.ts` の `compact()` を通し、空の欄は鍵ごと落とす
 - 見本データを「入れる」ボタンは画面から外した（本物の記録がある端末で押されると全部消えるため）。
   `removeSample()` は id が `r-101` 形式のものだけを消すので、本物（UUID）とはぶつからない
+- **まだ始まっていない契約**（更新して作った次の契約）は「今月の家賃」が無いので、
+  始まる月の額を出す。そうしないと一覧に ¥0 と出る（`buildContractRows`）
+- 契約の状態は3つ以上ある。**退去が決まっている／これから始まる／続いている／終わった**を
+  取りちがえると、「8月31日まで」と「あと50日で契約更新」が並ぶような矛盾が出る（`renewalText`）
 
 **これから当たる**
 - **iOSはホーム画面のアイコンを消すとデータも消える** → 控えの画面はフェーズ6。それまでは実データを入れすぎない
@@ -180,7 +184,7 @@ F:\apartment-app\
 ```
 cd F:\apartment-app\app
 F:\Claude\npm.cmd install     （node_modules が無い場合のみ）
-F:\Claude\npm.cmd run test    （120件通ることを確認）
+F:\Claude\npm.cmd run test    （124件通ることを確認）
 F:\Claude\npm.cmd run dev     （http://localhost:5173/apartment-app/ で開く）
 ```
 
