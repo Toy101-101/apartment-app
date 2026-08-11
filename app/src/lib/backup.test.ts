@@ -126,7 +126,7 @@ describe('控えの書き出し', () => {
     const backup = await createBackup()
     expect(backup.counts).toStrictEqual({
       meta: 1, rooms: 1, tenants: 1, leases: 1, rentTerms: 1,
-      payments: 2, paymentLog: 1, expenses: 1, notes: 1, schedules: 0,
+      payments: 2, paymentLog: 1, expenses: 1, notes: 1, schedules: 0, equipment: 0,
     })
   })
 

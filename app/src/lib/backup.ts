@@ -2,6 +2,7 @@ import {
   db,
   now,
   SCHEMA_VERSION,
+  type Equipment,
   type Expense,
   type Lease,
   type MetaRow,
@@ -45,6 +46,7 @@ export interface BackupData {
   expenses: Expense[]
   notes: Note[]
   schedules: Schedule[]
+  equipment: Equipment[]
 }
 
 /** 控えファイルの中身そのもの */
@@ -73,6 +75,7 @@ function emptyTables(): BackupData {
     expenses: [],
     notes: [],
     schedules: [],
+    equipment: [],
   }
 }
 
@@ -83,20 +86,26 @@ export const BACKUP_TABLES = Object.keys(emptyTables()) as (keyof BackupData)[]
 
 /** いま端末に入っているものを全部読み出す */
 export async function readAll(): Promise<BackupData> {
-  const [meta, rooms, tenants, leases, rentTerms, payments, paymentLog, expenses, notes, schedules] =
-    await Promise.all([
-      db.meta.toArray(),
-      db.rooms.toArray(),
-      db.tenants.toArray(),
-      db.leases.toArray(),
-      db.rentTerms.toArray(),
-      db.payments.toArray(),
-      db.paymentLog.toArray(),
-      db.expenses.toArray(),
-      db.notes.toArray(),
-      db.schedules.toArray(),
-    ])
-  return { meta, rooms, tenants, leases, rentTerms, payments, paymentLog, expenses, notes, schedules }
+  const [
+    meta, rooms, tenants, leases, rentTerms, payments, paymentLog, expenses, notes, schedules,
+    equipment,
+  ] = await Promise.all([
+    db.meta.toArray(),
+    db.rooms.toArray(),
+    db.tenants.toArray(),
+    db.leases.toArray(),
+    db.rentTerms.toArray(),
+    db.payments.toArray(),
+    db.paymentLog.toArray(),
+    db.expenses.toArray(),
+    db.notes.toArray(),
+    db.schedules.toArray(),
+    db.equipment.toArray(),
+  ])
+  return {
+    meta, rooms, tenants, leases, rentTerms, payments, paymentLog, expenses, notes, schedules,
+    equipment,
+  }
 }
 
 function countOf(data: BackupData): Record<string, number> {
@@ -143,6 +152,8 @@ const MIGRATIONS: Record<number, (data: RawData) => RawData> = {
   1: (data) => ({ ...emptyTables(), meta: data.meta }),
   // 2 → 3: 年間の予定（保険・税金・点検）が増えた。版2の控えには入っていないので空で足す。
   2: (data) => ({ ...data, schedules: [] }),
+  // 3 → 4: 設備の年式（給湯器・エアコン）が増えた。
+  3: (data) => ({ ...data, equipment: [] }),
 }
 
 function asArray(value: unknown): unknown[] {
@@ -229,6 +240,7 @@ export async function restoreBackup(backup: Backup): Promise<Record<string, numb
     db.expenses,
     db.notes,
     db.schedules,
+    db.equipment,
   ]
 
   // 途中で失敗したら全部なかったことにする（半分だけ入った状態を作らない）
@@ -244,6 +256,7 @@ export async function restoreBackup(backup: Backup): Promise<Record<string, numb
     await db.expenses.bulkPut(data.expenses)
     await db.notes.bulkPut(data.notes)
     await db.schedules.bulkPut(data.schedules)
+    await db.equipment.bulkPut(data.equipment)
   })
 
   return countOf(data)

@@ -177,6 +177,12 @@
   color: var(--brand);
   text-decoration: none;
 }
+/* 替え時が来ているときだけ、入口の色を変える（お知らせ枠は汚さない） */
+.keepWarn {
+  border-color: var(--warn);
+  background: var(--warn-weak);
+  color: var(--warn);
+}
 .keepName {
   font-size: var(--fs-body);
   font-weight: 800;

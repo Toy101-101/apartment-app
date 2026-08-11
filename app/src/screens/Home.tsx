@@ -5,6 +5,9 @@ import { db } from '../db'
 import { buildContractRows, needsAttention, renewalText } from '../lib/contracts'
 import { formatDate, formatMonth, formatYear, today, yen } from '../lib/date'
 import { buildMonthRows, summarize, thisMonth } from '../lib/rent'
+import {
+  buildEquipmentRows, needsAttention as equipmentDue, overdue as equipmentOverdue,
+} from '../lib/equipment'
 import { hasSampleData, removeSample } from '../lib/sample'
 import {
   buildScheduleRows, needsAttention as schedulesDue,
@@ -26,7 +29,9 @@ export default function Home() {
   const year = Number(month.slice(0, 4))
 
   const view = useLiveQuery(async () => {
-    const [rooms, leases, tenants, rentTerms, payments, expenses, schedules, sample, lastShare] = await Promise.all([
+    const [
+      rooms, leases, tenants, rentTerms, payments, expenses, schedules, equipment, sample, lastShare,
+    ] = await Promise.all([
       db.rooms.toArray(),
       db.leases.toArray(),
       db.tenants.toArray(),
@@ -35,12 +40,17 @@ export default function Home() {
       db.payments.where('month').between(`${year}-01`, `${year}-12`, true, true).toArray(),
       db.expenses.toArray(),
       db.schedules.toArray(),
+      db.equipment.toArray(),
       hasSampleData(),
       db.meta.get('lastShareAt'),
     ])
+    const equipmentRows = buildEquipmentRows({ equipment, rooms })
     return {
       due: schedulesDue(buildScheduleRows(schedules)),
       scheduleCount: schedules.filter((s) => !s.deletedAt).length,
+      equipmentCount: equipmentRows.length,
+      equipmentSoon: equipmentDue(equipmentRows).length,
+      equipmentOver: equipmentOverdue(equipmentRows).length,
       money: summarize(buildMonthRows({ month, rooms, leases, tenants, rentTerms, payments })),
       renewals: needsAttention(buildContractRows({ leases, rooms, tenants, rentTerms })),
       expenses: expenses.filter((e) => !e.deletedAt).length,
@@ -171,6 +181,26 @@ export default function Home() {
                 : due.length > 0
                   ? `${view.scheduleCount}件のうち、${due.length}件が近づいています`
                   : `${view.scheduleCount}件を見ています`
+              : '…'}
+          </span>
+        </Link>
+
+        {/* 給湯器の替え時は「今日、急いですること」ではないので、上のお知らせ枠には出さない。
+            そのかわり、替え時が来ていたら入口の色を変えて気づけるようにする */}
+        <Link
+          className={`${s.keep} ${view && view.equipmentOver > 0 ? s.keepWarn : ''}`}
+          to="/equipment"
+        >
+          <span className={s.keepName}>⑥ 設備の年式（給湯器・エアコン）</span>
+          <span className={s.keepSub}>
+            {view
+              ? view.equipmentCount === 0
+                ? 'まだ登録がありません'
+                : view.equipmentOver > 0
+                  ? `${view.equipmentOver}台が替え時を過ぎています`
+                  : view.equipmentSoon > 0
+                    ? `${view.equipmentSoon}台が、そろそろ替え時です`
+                    : `${view.equipmentCount}台を見ています`
               : '…'}
           </span>
         </Link>

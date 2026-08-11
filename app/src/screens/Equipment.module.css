@@ -1,0 +1,144 @@
+/* ⑥ 設備の年式 */
+
+.add {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  min-height: var(--tap);
+  margin-bottom: var(--sp-4);
+  border: var(--border) solid var(--brand-dark);
+  border-radius: var(--radius);
+  background: var(--brand);
+  color: #fff;
+  font-size: var(--fs-body);
+  font-weight: 800;
+  text-decoration: none;
+}
+
+.note {
+  margin: 0 0 var(--sp-4);
+  font-size: var(--fs-lead);
+  color: var(--ink-2);
+  line-height: 1.9;
+}
+
+/* --- 1台ぶん --- */
+.card {
+  border: var(--border) solid var(--line);
+  border-radius: var(--radius);
+  padding: var(--sp-4);
+  margin-bottom: var(--sp-4);
+}
+/* 目安を過ぎている。壊れてからでは高くつくので、いちばん強く出す */
+.red {
+  border-color: var(--danger);
+  background: var(--danger-weak);
+}
+.yellow {
+  border-color: var(--warn);
+  background: var(--warn-weak);
+}
+
+.head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--sp-3);
+}
+.title {
+  margin: 0;
+  font-size: var(--fs-title);
+  font-weight: 800;
+}
+/* 年式がこの画面の主役。数字をいちばん大きく出す */
+.age {
+  flex: 0 0 auto;
+  font-size: var(--fs-big);
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+}
+
+.life {
+  margin: var(--sp-2) 0 0;
+  font-size: var(--fs-sub);
+  color: var(--ink-2);
+}
+.lifeWarn {
+  margin: var(--sp-2) 0 0;
+  font-size: var(--fs-body);
+  font-weight: 800;
+  color: var(--danger);
+}
+.yellow .lifeWarn { color: var(--warn); }
+
+.meta {
+  margin: var(--sp-2) 0 0;
+  font-size: var(--fs-sub);
+  color: var(--ink-2);
+}
+.memo {
+  margin: var(--sp-2) 0 0;
+  font-size: var(--fs-sub);
+  color: var(--ink-2);
+  line-height: 1.8;
+  white-space: pre-wrap;
+}
+
+.actions {
+  display: grid;
+  gap: var(--sp-3);
+  margin-top: var(--sp-4);
+}
+.primary,
+.secondary {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  min-height: var(--tap);
+  padding: var(--sp-2) var(--sp-3);
+  border-radius: var(--radius);
+  font-size: var(--fs-body);
+  font-weight: 800;
+  text-decoration: none;
+}
+.primary {
+  border: var(--border) solid var(--brand-dark);
+  background: var(--brand);
+  color: #fff;
+}
+.secondary {
+  border: var(--border) solid var(--brand);
+  background: #fff;
+  color: var(--brand);
+}
+
+/* --- 取り替えたもの（履歴） ---
+   「前のは13年もった」が、次に替えるときの判断材料になる */
+.history {
+  border: 2px solid var(--line-soft);
+  border-radius: var(--radius);
+  padding: var(--sp-3) var(--sp-4);
+  margin-bottom: var(--sp-4);
+}
+.historyTitle {
+  margin: 0 0 var(--sp-2);
+  font-size: var(--fs-lead);
+  font-weight: 800;
+}
+.history ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.history li {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: var(--sp-2) 0;
+  border-bottom: 1px solid var(--line-soft);
+  font-size: var(--fs-sub);
+}
+.history li:last-child { border-bottom: none; }
+.historyMeta { color: var(--ink-2); }

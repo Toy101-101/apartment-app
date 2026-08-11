@@ -6,6 +6,8 @@ import Backup from './screens/Backup'
 import ContractDetail from './screens/ContractDetail'
 import ContractForm from './screens/ContractForm'
 import Contracts from './screens/Contracts'
+import Equipment from './screens/Equipment'
+import EquipmentForm from './screens/EquipmentForm'
 import ExpenseDetail from './screens/ExpenseDetail'
 import ExpenseForm from './screens/ExpenseForm'
 import Expenses from './screens/Expenses'
@@ -39,6 +41,10 @@ createRoot(document.getElementById('root')!).render(
         <Route path="/schedules" element={<Schedules />} />
         <Route path="/schedules/new" element={<ScheduleForm />} />
         <Route path="/schedules/:id/edit" element={<ScheduleForm />} />
+        <Route path="/equipment" element={<Equipment />} />
+        <Route path="/equipment/new" element={<EquipmentForm />} />
+        <Route path="/equipment/:id/edit" element={<EquipmentForm />} />
+        <Route path="/equipment/:id/replace" element={<EquipmentForm />} />
         <Route path="/yearly" element={<Yearly />} />
         <Route path="/backup" element={<Backup />} />
         <Route path="/print" element={<Print />} />

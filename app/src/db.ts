@@ -154,6 +154,33 @@ export interface Schedule extends BaseRow {
   memo?: string
 }
 
+/** 設備の種類 */
+export type EquipmentKind = 'waterHeater' | 'aircon' | 'other'
+
+/**
+ * 設備の年式（給湯器・エアコンなど）。
+ *
+ * 壊れてから慌てて手配すると、真冬や真夏に入居者を待たせたうえ、
+ * 緊急の工事になって高くつく。設置した年を残しておけば「そろそろ替え時」が先に分かる。
+ *
+ * 取り替えたときは**上書きしない**。古い行に `replacedOn` を入れて残し、
+ * 新しい行を作る（契約の更新と同じ考え方）。何年もったかが次の判断材料になる。
+ */
+export interface Equipment extends BaseRow {
+  kind: EquipmentKind
+  /** どの部屋のものか。建物全体のもの（受水槽など）なら入れない */
+  roomId?: string
+  /** 設置した年月 'YYYY-MM'。日まで分かることは少ない */
+  installedOn: string
+  /** 何年もつ見込みか（目安）。種類ごとの既定値を入れておき、あとで直せる */
+  lifeYears: number
+  maker?: string
+  model?: string
+  memo?: string
+  /** 取り替えた日 'YYYY-MM-DD'。入っていれば、この設備はもう使われていない */
+  replacedOn?: string
+}
+
 /** メモを結びつける先 */
 export type NoteTarget = 'room' | 'tenant' | 'lease' | 'payment' | 'expense'
 
@@ -179,6 +206,7 @@ export class AppDB extends Dexie {
   photos!: Table<Photo, string>
   notes!: Table<Note, string>
   schedules!: Table<Schedule, string>
+  equipment!: Table<Equipment, string>
 
   constructor() {
     super('apartment')
@@ -204,6 +232,10 @@ export class AppDB extends Dexie {
     this.version(3).stores({
       schedules: 'id, nextDate, kind',
     })
+    // version(4): 設備の年式を足す
+    this.version(4).stores({
+      equipment: 'id, roomId, kind, installedOn',
+    })
   }
 }
 
@@ -213,7 +245,7 @@ export const db = new AppDB()
  * データの形の版。控えJSONにも必ず書き込む。
  * Dexie の version() と同じ数字にそろえておく（ずれると原因を追いにくくなる）。
  */
-export const SCHEMA_VERSION = 3
+export const SCHEMA_VERSION = 4
 
 /** 新しい行の id */
 export function newId(): string {

@@ -48,7 +48,7 @@ describe('表を足したときの引き継ぎ', () => {
     })
     expect(await db.rooms.count()).toBe(1)
     expect(db.tables.map((t) => t.name).sort()).toStrictEqual([
-      'expenses', 'leases', 'meta', 'notes', 'paymentLog',
+      'equipment', 'expenses', 'leases', 'meta', 'notes', 'paymentLog',
       'payments', 'photos', 'rentTerms', 'rooms', 'schedules', 'tenants',
     ])
   })
@@ -92,5 +92,43 @@ describe('表を足したときの引き継ぎ', () => {
       nextDate: '2027-04-01', everyMonths: 12, noticeDays: 60,
     })
     expect(await db.schedules.count()).toBe(1)
+  })
+
+  it('版3（年間の予定まで）で保存したものが、版4に上がっても残る', async () => {
+    const old = new Dexie('apartment')
+    old.version(1).stores({ meta: '&key' })
+    old.version(2).stores({
+      meta: '&key',
+      rooms: 'id, roomNo, sortOrder',
+      tenants: 'id, kana',
+      leases: 'id, roomId, tenantId, endDate',
+      rentTerms: 'id, leaseId, [leaseId+fromMonth]',
+      payments: 'id, leaseId, month, [leaseId+month]',
+      paymentLog: 'id, paymentId, at',
+      expenses: 'id, kind, date, roomId',
+      photos: 'id, createdAt',
+      notes: 'id, targetType, date, [targetType+targetId]',
+    })
+    old.version(3).stores({ schedules: 'id, nextDate, kind' })
+    await old.open()
+    await old.table('schedules').put({
+      id: 's-1', createdAt: '2026-08-11T00:00:00.000Z', updatedAt: '2026-08-11T00:00:00.000Z',
+      title: '火災保険の更新', kind: 'insurance',
+      nextDate: '2027-04-01', everyMonths: 12, noticeDays: 60,
+    })
+    old.close()
+
+    const { db, SCHEMA_VERSION, newId, now } = await import('./db')
+    await db.open()
+
+    expect(db.verno).toBe(SCHEMA_VERSION)
+    expect((await db.schedules.get('s-1'))?.title).toBe('火災保険の更新')
+
+    const at = now()
+    await db.equipment.put({
+      id: newId(), createdAt: at, updatedAt: at,
+      kind: 'waterHeater', installedOn: '2014-04', lifeYears: 12,
+    })
+    expect(await db.equipment.count()).toBe(1)
   })
 })
