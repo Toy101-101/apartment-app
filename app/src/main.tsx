@@ -1,6 +1,6 @@
-import { StrictMode } from 'react'
+import { StrictMode, useLayoutEffect } from 'react'
 import { createRoot } from 'react-dom/client'
-import { HashRouter, Routes, Route } from 'react-router-dom'
+import { HashRouter, Routes, Route, useLocation } from 'react-router-dom'
 import './styles/tokens.css'
 import Backup from './screens/Backup'
 import ContractDetail from './screens/ContractDetail'
@@ -21,11 +21,34 @@ import Settings from './screens/Settings'
 import Vacancy from './screens/Vacancy'
 import Yearly from './screens/Yearly'
 
+/**
+ * 画面を移ったら、必ずいちばん上から見せる。
+ *
+ * 画面が切りかわっても、スクロールの位置はそのまま残る。
+ * ホームの下のほうにある入口（⑤年間の予定・⑥設備の年式・年ごとのまとめ・控え）を
+ * 押すと、次の画面が**途中から**開いてしまい、上に何があるのか分からなくなる。
+ *
+ * `useLayoutEffect` を使うのは、絵を描く前に位置を戻すため。
+ * `useEffect` だと、一瞬だけ途中の位置が見えてしまう。
+ */
+function ScrollToTop() {
+  const { pathname } = useLocation()
+  useLayoutEffect(() => {
+    window.scrollTo(0, 0)
+  }, [pathname])
+  return null
+}
+
+// もどるときにブラウザが勝手に位置を戻すと、上の処理と取り合いになる。
+// どの画面もいちばん上から始まる、という1つの決まりにそろえる
+if ('scrollRestoration' in history) history.scrollRestoration = 'manual'
+
 // GitHub Pages では直接URLを開くと404になるため、
 // 通常の BrowserRouter ではなく HashRouter を使う（URLに # が入る）
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <HashRouter>
+      <ScrollToTop />
       <Routes>
         <Route path="/" element={<Home />} />
         <Route path="/payments" element={<Payments />} />
