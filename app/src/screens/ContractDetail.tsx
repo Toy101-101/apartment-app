@@ -3,6 +3,7 @@ import { Link, useNavigate, useParams } from 'react-router-dom'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { Field } from '../components/Field'
 import { Screen } from '../components/Screen'
+import { VoiceMemo } from '../components/VoiceMemo'
 import { db } from '../db'
 import {
   addNote, cancelEndLease, changeRent, endLease, removeNote, renewLease, renewalText, sortNotes,
@@ -231,9 +232,8 @@ function NotePanel({ busy, onSave }: {
   return (
     <section className={s.panel}>
       <h3 className={s.panelTitle}>メモを足す</h3>
-      <Field label="内容"
-        hint="文字を打つのが手間なら、キーボードのマイクを押して話しても入れられます。">
-        {(id) => <textarea id={id} value={body} onChange={(e) => setBody(e.target.value)} />}
+      <Field label="内容" hint="話して書くこともできます。">
+        {(id) => <VoiceMemo id={id} value={body} onChange={setBody} />}
       </Field>
       <Field label="書いた人">
         {(id) => (

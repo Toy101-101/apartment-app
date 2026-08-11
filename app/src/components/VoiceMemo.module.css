@@ -1,0 +1,50 @@
+/* 話している途中の文字。薄く出し、確定すると上の欄に入る */
+.interim {
+  margin: var(--sp-2) 0 0;
+  border: 2px dashed var(--line-soft);
+  border-radius: var(--radius);
+  padding: var(--sp-2) var(--sp-3);
+  font-size: var(--fs-lead);
+  color: var(--ink-2);
+  line-height: 1.8;
+  min-height: var(--tap);
+}
+
+.mic {
+  display: block;
+  width: 100%;
+  min-height: var(--tap);
+  margin-top: var(--sp-3);
+  padding: var(--sp-2) var(--sp-3);
+  border: var(--border) solid var(--teal);
+  border-radius: var(--radius);
+  background: var(--teal-weak);
+  color: var(--teal);
+  font-size: var(--fs-body);
+  font-weight: 800;
+}
+.listening {
+  border-color: var(--danger);
+  background: var(--danger);
+  color: #fff;
+}
+.mic:disabled {
+  border-color: var(--line-soft);
+  background: #f1f3f5;
+  color: var(--ink-2);
+  cursor: not-allowed;
+}
+
+.hint {
+  margin: var(--sp-2) 0 0;
+  font-size: var(--fs-sub);
+  color: var(--ink-2);
+  line-height: 1.7;
+}
+.message {
+  margin: var(--sp-2) 0 0;
+  font-size: var(--fs-sub);
+  font-weight: 800;
+  color: var(--danger);
+  line-height: 1.7;
+}

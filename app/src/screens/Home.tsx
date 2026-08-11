@@ -20,17 +20,19 @@ export default function Home() {
   const month = thisMonth()
 
   const view = useLiveQuery(async () => {
-    const [rooms, leases, tenants, rentTerms, payments, sample] = await Promise.all([
+    const [rooms, leases, tenants, rentTerms, payments, expenses, sample] = await Promise.all([
       db.rooms.toArray(),
       db.leases.toArray(),
       db.tenants.toArray(),
       db.rentTerms.toArray(),
       db.payments.where('month').equals(month).toArray(),
+      db.expenses.toArray(),
       hasSampleData(),
     ])
     return {
       money: summarize(buildMonthRows({ month, rooms, leases, tenants, rentTerms, payments })),
       renewals: needsAttention(buildContractRows({ leases, rooms, tenants, rentTerms })),
+      expenses: expenses.filter((e) => !e.deletedAt).length,
       sample,
     }
   }, [month])
@@ -105,13 +107,15 @@ export default function Home() {
               </span>
             </span>
           </Link>
-          <button className={`${s.tile} ${s.t3}`} disabled>
+          <Link className={`${s.tile} ${s.t3}`} to="/expenses">
             <span className={s.tileNo}>③</span>
             <span>
               <span className={s.tileName}>修繕・費用</span>
-              <span className={s.tileSub}>準備中</span>
+              <span className={s.tileSub}>
+                {view ? `${view.expenses}件` : '…'}
+              </span>
             </span>
-          </button>
+          </Link>
           <button className={`${s.tile} ${s.t4}`} disabled>
             <span className={s.tileNo}>④</span>
             <span>

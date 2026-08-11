@@ -1,0 +1,111 @@
+/* ③ 修繕・費用 一覧 */
+
+.tabs {
+  display: flex;
+  gap: var(--sp-2);
+  margin-bottom: var(--sp-4);
+}
+.tabs button {
+  flex: 1;
+  min-height: var(--tap);
+  padding: var(--sp-2);
+  border: var(--border) solid var(--brand);
+  border-radius: var(--radius);
+  background: #fff;
+  color: var(--brand);
+  font-size: var(--fs-lead);
+  font-weight: 800;
+}
+.tabs button[aria-pressed='true'] {
+  background: var(--brand);
+  color: #fff;
+}
+
+.add {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: var(--tap);
+  margin-bottom: var(--sp-5);
+  border: var(--border) solid var(--brand-dark);
+  border-radius: var(--radius);
+  background: var(--brand);
+  color: #fff;
+  font-size: var(--fs-body);
+  font-weight: 800;
+  text-decoration: none;
+}
+
+.note {
+  margin: var(--sp-4) 0;
+  font-size: var(--fs-lead);
+  color: var(--ink-2);
+  line-height: 1.8;
+}
+
+.card {
+  display: block;
+  border: var(--border) solid var(--line);
+  border-radius: var(--radius);
+  padding: var(--sp-3) var(--sp-4);
+  margin-bottom: var(--sp-3);
+  color: var(--ink);
+  text-decoration: none;
+}
+.card:active { background: #f1f3f5; }
+
+.title {
+  font-size: var(--fs-body);
+  font-weight: 800;
+  line-height: 1.4;
+  word-break: auto-phrase;
+}
+.meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--sp-2) var(--sp-3);
+  margin-top: var(--sp-2);
+  font-size: var(--fs-sub);
+  color: var(--ink-2);
+}
+.repair,
+.fixed {
+  padding: 2px var(--sp-2);
+  border-radius: 999px;
+  font-weight: 800;
+}
+.repair {
+  background: var(--warn-weak);
+  color: var(--warn);
+}
+.fixed {
+  background: #eceff1;
+  color: var(--ink-2);
+}
+
+.amount {
+  margin-top: var(--sp-2);
+  font-size: var(--fs-big);
+  font-weight: 800;
+}
+.preview,
+.photos {
+  margin-top: var(--sp-2);
+  font-size: var(--fs-sub);
+  color: var(--ink-2);
+  line-height: 1.6;
+}
+
+.summary {
+  border: var(--border) solid var(--line);
+  border-radius: var(--radius);
+  background: #fafbfc;
+  padding: var(--sp-3) var(--sp-4);
+  margin-top: var(--sp-4);
+  font-size: var(--fs-lead);
+}
+.summary b {
+  font-size: var(--fs-huge);
+  font-weight: 800;
+}

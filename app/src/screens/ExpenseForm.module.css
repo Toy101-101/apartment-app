@@ -1,0 +1,67 @@
+/* 費用の記録（新規・書きかえ） */
+
+.note {
+  margin: var(--sp-4) 0;
+  font-size: var(--fs-lead);
+  color: var(--ink-2);
+  line-height: 1.8;
+}
+
+/* ボタンを押すだけで選べるところ */
+.choices {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-2);
+}
+.choices button {
+  flex: 1;
+  min-width: 96px;
+  min-height: var(--tap);
+  padding: var(--sp-2);
+  border: var(--border) solid var(--brand);
+  border-radius: var(--radius);
+  background: #fff;
+  color: var(--brand);
+  font-size: var(--fs-lead);
+  font-weight: 800;
+}
+.choices button[aria-pressed='true'] {
+  background: var(--brand);
+  color: #fff;
+}
+/* 部屋番号はたくさん並ぶので、1つぶんを小さめに */
+.rooms button {
+  flex: 0 0 auto;
+  min-width: 84px;
+}
+
+.spaced {
+  margin-top: var(--sp-3);
+}
+
+.failed {
+  margin: var(--sp-4) 0 0;
+  font-size: var(--fs-lead);
+  font-weight: 800;
+  color: var(--danger);
+  line-height: 1.7;
+}
+
+.save {
+  display: block;
+  width: 100%;
+  min-height: var(--tap);
+  margin-top: var(--sp-5);
+  padding: var(--sp-2) var(--sp-3);
+  border: var(--border) solid var(--brand-dark);
+  border-radius: var(--radius);
+  background: var(--brand);
+  color: #fff;
+  font-size: var(--fs-body);
+  font-weight: 800;
+}
+.save:disabled {
+  background: var(--brand-weak);
+  color: var(--brand);
+  cursor: progress;
+}

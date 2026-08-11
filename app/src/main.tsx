@@ -5,6 +5,9 @@ import './styles/tokens.css'
 import ContractDetail from './screens/ContractDetail'
 import ContractForm from './screens/ContractForm'
 import Contracts from './screens/Contracts'
+import ExpenseDetail from './screens/ExpenseDetail'
+import ExpenseForm from './screens/ExpenseForm'
+import Expenses from './screens/Expenses'
 import Home from './screens/Home'
 import Payments from './screens/Payments'
 
@@ -21,6 +24,10 @@ createRoot(document.getElementById('root')!).render(
         <Route path="/contracts/new" element={<ContractForm />} />
         <Route path="/contracts/:id" element={<ContractDetail />} />
         <Route path="/contracts/:id/edit" element={<ContractForm />} />
+        <Route path="/expenses" element={<Expenses />} />
+        <Route path="/expenses/new" element={<ExpenseForm />} />
+        <Route path="/expenses/:id" element={<ExpenseDetail />} />
+        <Route path="/expenses/:id/edit" element={<ExpenseForm />} />
         {/* 知らないURLはホームに落とす（控えのリンクなどを踏んでも迷子にならない） */}
         <Route path="*" element={<Home />} />
       </Routes>

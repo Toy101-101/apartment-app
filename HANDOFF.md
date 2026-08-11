@@ -1,6 +1,6 @@
 # 引き継ぎメモ（現在地）
 
-最終更新: 2026-08-11 / フェーズ3 完了時点
+最終更新: 2026-08-11 / フェーズ4 完了時点
 
 このファイルは「**いま何がどこまでできていて、次に何をするか**」だけを書く。
 なぜそう作るのかは `PLAN.md`、決めごとは `README.md` を見ること。
@@ -9,7 +9,7 @@
 
 ## 1. 現在地
 
-**フェーズ3（①入居者・契約）まで完了。本物のデータを登録できる状態。**
+**フェーズ4（③修繕・費用 ＋ 音声入力 ＋ 写真）まで完了。残るは ④空室 と 共有・印刷 だけ。**
 
 - 公開URL: <https://Toy101-101.github.io/apartment-app/>
 - リポジトリ: <https://github.com/Toy101-101/apartment-app>（**公開**リポジトリ）
@@ -29,10 +29,18 @@
   - `lib/contracts.ts` — 上のすべての土台。**上書きしない**決まりごとはここに集約
   - `components/Screen.tsx` `components/Field.tsx` — 画面の外枠と入力欄（3画面で共通）
   - ホーム — 未入金に加えて**更新が近い契約**も出す。①②のタイルが押せる
-- テスト: **124件**が手元で合格
-  （`date` 20／`backup` 20／`rent` 22／`contracts` 35／`payments` 13／`sample` 12／`db` 2）
+- フェーズ4: **③修繕・費用 ＋ 音声入力 ＋ 写真**
+  - `screens/Expenses.tsx` — 一覧（すべて／修繕／固定費のタブ、合計つき）
+  - `screens/ExpenseDetail.tsx` — 詳細。**「なぜ、この対応をしたか」を金額より先に、いちばん大きく**置く
+  - `screens/ExpenseForm.tsx` — 記録。日付・場所・種類はボタンを押すだけ
+  - `components/VoiceMemo.tsx` ＋ `lib/speech.ts` — 🎤押して話す。**契約のいきさつメモにも入れてある**
+  - `components/PhotoPicker.tsx` ＋ `lib/photos.ts` — 向きを直して長辺1600px・品質0.8に圧縮してから保存
+  - ホーム — ③のタイルが押せる（件数つき）
+- テスト: **162件**が手元で合格
+  （`date` 20／`backup` 20／`rent` 22／`contracts` 35／`payments` 13／`expenses` 18／
+  　`photos` 15／`speech` 7／`sample` 12／`db` 2）
 
-**まだ無いもの**: ③修繕・費用 と ④空室の状況 は「準備中」の空ボタン。音声入力と写真もまだ。
+**まだ無いもの**: ④空室の状況（「準備中」の空ボタン）と、控えの画面・印刷。
 
 ---
 
@@ -86,16 +94,22 @@ F:\apartment-app\
     src\lib\rent.ts        家賃の計算だけ（DBに触らない）＋ rent.test.ts
     src\lib\payments.ts    済／未の切替・履歴・取り消し ＋ payments.test.ts
     src\lib\contracts.ts   契約の登録・更新・退去・メモ ＋ contracts.test.ts
+    src\lib\expenses.ts    修繕・費用 ＋ expenses.test.ts
+    src\lib\photos.ts      写真の圧縮と保存 ＋ photos.test.ts
+    src\lib\speech.ts      音声入力 ＋ speech.test.ts
     src\lib\sample.ts      架空の見本データ ＋ sample.test.ts（入れるボタンは画面から外した）
     src\lib\backup.ts      控えの書き出し・読み込み ＋ backup.test.ts（いまは画面から呼んでいない）
     src\lib\fixtures\      古い版の控え（固定ファイル。書き換え禁止）
     src\db.ts              Dexie。version(2) で本体10表 ＋ db.test.ts（版上げ・時刻の試験）
-    src\components\         画面の外枠（Screen）と入力欄（Field）
+    src\components\         Screen（外枠）／Field（入力欄）／VoiceMemo（音声）／PhotoPicker（写真）
     src\screens\Home.tsx            ホーム画面
     src\screens\Payments.tsx        ② 家賃の入金
     src\screens\Contracts.tsx       ① 一覧
     src\screens\ContractDetail.tsx  ① 詳細（家賃の履歴・いきさつメモ・手を入れる操作）
     src\screens\ContractForm.tsx    ① 登録と書きかえ
+    src\screens\Expenses.tsx        ③ 一覧
+    src\screens\ExpenseDetail.tsx   ③ 詳細（なぜそうしたか・写真）
+    src\screens\ExpenseForm.tsx     ③ 記録と書きかえ（音声・写真つき）
     src\styles\tokens.css  デザイントークン
     vite.config.ts         base と PWA の設定
     public\                アイコン5種（_tmp\make-icons.mjs で生成）
@@ -146,31 +160,39 @@ F:\apartment-app\
 - 契約の状態は3つ以上ある。**退去が決まっている／これから始まる／続いている／終わった**を
   取りちがえると、「8月31日まで」と「あと50日で契約更新」が並ぶような矛盾が出る（`renewalText`）
 
+**対処済み（フェーズ4で追加）**
+- 音声認識はネット接続が必要 → 電波が無いときはボタンを無効にし「文字で書く」に誘導（`VoiceMemo`）
+- iOS Safariは1分ほどで自動終了 → `onend` で黙って再開する（`lib/speech.ts`）
+- 非対応ブラウザでは**ボタン自体を出さない**（押せないボタンは故障に見える）。
+  その場合もキーボードのマイクは使えるので、欄はいつも広く取ってある
+- 認識した言葉は**必ず編集できる文字として欄に入る**。自動で保存・確定しない
+- iPhoneの縦写真が横倒しになる → `createImageBitmap(file, {imageOrientation:'from-image'})` を必ず通す。
+  ここを通さない道を作らないこと（`lib/photos.ts` の `compressImage` だけが入口）
+- 写真は長辺1600px・JPEG品質0.8に圧縮してから保存（1枚200〜400KB）
+- **`capture="environment"` は付けていない**。付けるとiPhoneでカメラしか開けなくなり、
+  先に撮っておいた写真を選べなくなるため（PLAN.mdの記述から意図的に外した）
+- 選んだ写真は「保存」を押すまで端末に書かない → 途中でやめた写真がゴミとして残らない
+- `URL.createObjectURL` は画面を離れるとき必ず `revokeObjectURL`（解放しないとメモリを食い続ける）
+
 **これから当たる**
 - **iOSはホーム画面のアイコンを消すとデータも消える** → 控えの画面はフェーズ6。それまでは実データを入れすぎない
-- 音声認識はネット接続が必要、iOS Safariは1分ほどで自動終了 → `onend` で再開する
-- 写真は `createImageBitmap(file, {imageOrientation:'from-image'})` で向きを直し、長辺1600px・品質0.8に圧縮してから保存する
+- 写真が増えると控えの共有が重くなる → JSONと写真を分けて `navigator.share({files})` に渡す
 
 ---
 
-## 6. 次にやること（フェーズ4・6〜7日分）
+## 6. 次にやること（フェーズ5・2〜3日分）
 
-**③修繕・費用 ＋ 音声入力 ＋ 写真**。メモが主役の画面なので、音声と写真をここで完成させる。
+**④空室の状況**。**契約データから自動で導き出すだけ**で、独立した入力は持たない（二重管理をなくす）。
 
-1. **一覧**（修繕／固定費のタブ）と**詳細**。表は `expenses`（`kind: 'repair' | 'fixed'`）にもうある
-2. **新規登録** — 日付・件名・金額・業者・対象の部屋（建物全体なら空）・メモ
-3. **音声入力** — `webkitSpeechRecognition`（`lang:'ja-JP'`, `continuous:true`, `interimResults:true`）
-   - 結果は**必ず編集できるテキストとして欄に入れる**。自動で保存しない
-   - オフラインでは使えないのでボタンを無効化し、「文字で書く」に誘導する
-   - iOS Safari は1分ほどで自動終了する → `onend` で自動的に再開する
-   - 非対応ブラウザでは**ボタン自体を出さない**（押せないボタンは故障に見える）
-   - いまは「キーボードのマイクで話せます」と案内だけしてある（PLAN の2段構えの1段目）
-4. **写真** — `createImageBitmap(file, {imageOrientation:'from-image'})` で向きを直し、
-   長辺1600px・JPEG品質0.8に圧縮して `photos` に Blob で保存。表示は `URL.createObjectURL`、
-   画面を離れるとき `revokeObjectURL`（解放しないとメモリを食い続ける）
-5. `expenses.photoIds` で写真とつなぐ。**控えJSONに写真は入れない**（`backup.ts` は対応済み）
+1. タイル一覧（部屋番号を並べ、入居中／空室／退去予定で色を変える）
+   - 入居中 = その日に生きている契約がある（`isActiveIn` が `lib/rent.ts` にある）
+   - 空室 = 契約が無い。いつから空いているかは、前の契約の終わり（`movedOutOn ?? endDate`）から出す
+   - 退去予定 = `movedOutOn` が未来の契約
+2. タイルを押したら、入居中はその契約へ、空室は前の入居者の記録へ飛ばす
+3. ホームの ④ タイルに「空室◯室」を出す
+4. **`status` という欄を作らないこと。** 作った瞬間に契約と食い違いはじめる
 
-そのあと: フェーズ5（④空室。契約から導出するだけなので短い）→ 6（共有・印刷）
+そのあと: フェーズ6（共有・印刷・仕上げ）
 
 **フェーズ6でやる控えまわり**
 - 控えの書き出し・読み込みの**画面**（関数は `lib/backup.ts` にもうある）
@@ -184,7 +206,7 @@ F:\apartment-app\
 ```
 cd F:\apartment-app\app
 F:\Claude\npm.cmd install     （node_modules が無い場合のみ）
-F:\Claude\npm.cmd run test    （124件通ることを確認）
+F:\Claude\npm.cmd run test    （162件通ることを確認）
 F:\Claude\npm.cmd run dev     （http://localhost:5173/apartment-app/ で開く）
 ```
 

@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { Field } from '../components/Field'
 import { Screen } from '../components/Screen'
+import { VoiceMemo } from '../components/VoiceMemo'
 import { db } from '../db'
 import { addNote, createContract, updateContract, type ContractInput } from '../lib/contracts'
 import { monthOf, rentTermFor } from '../lib/rent'
@@ -260,12 +261,9 @@ export default function ContractForm() {
               <h2 className={s.groupTitle}>契約のいきさつ</h2>
               <Field
                 label="メモ"
-                hint="なぜこの家賃にしたか、どういう経緯で入居されたか。あとで読む家族のために残します。文字を打つのが手間なら、キーボードのマイクで話しても入れられます。"
+                hint="なぜこの家賃にしたか、どういう経緯で入居されたか。あとで読む家族のために残します。話して書くこともできます。"
               >
-                {(id) => (
-                  <textarea id={id} value={form.note}
-                    onChange={(e) => set('note')(e.target.value)} />
-                )}
+                {(id) => <VoiceMemo id={id} value={form.note} onChange={set('note')} />}
               </Field>
               <Field label="書いた人">
                 {(id) => (
