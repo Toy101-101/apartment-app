@@ -74,6 +74,12 @@ export function monthKey(date: Date): string {
   return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`
 }
 
+/** 2026 → '令和8年'（令和より前は '2018年' のように西暦のまま） */
+export function formatYear(year: number): string {
+  const era = reiwaYear(new Date(year, 0, 1))
+  return era === null ? `${year}年` : `令和${era}年`
+}
+
 /** '2026-08' → '令和8年8月分' */
 export function formatMonth(key: string): string {
   const [y, m] = key.split('-').map(Number)

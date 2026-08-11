@@ -13,6 +13,7 @@ import Home from './screens/Home'
 import Payments from './screens/Payments'
 import Print from './screens/Print'
 import Vacancy from './screens/Vacancy'
+import Yearly from './screens/Yearly'
 
 // GitHub Pages では直接URLを開くと404になるため、
 // 通常の BrowserRouter ではなく HashRouter を使う（URLに # が入る）
@@ -32,6 +33,7 @@ createRoot(document.getElementById('root')!).render(
         <Route path="/expenses/:id" element={<ExpenseDetail />} />
         <Route path="/expenses/:id/edit" element={<ExpenseForm />} />
         <Route path="/vacancy" element={<Vacancy />} />
+        <Route path="/yearly" element={<Yearly />} />
         <Route path="/backup" element={<Backup />} />
         <Route path="/print" element={<Print />} />
         {/* 知らないURLはホームに落とす（控えのリンクなどを踏んでも迷子にならない） */}

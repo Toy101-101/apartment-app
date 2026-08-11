@@ -3,10 +3,11 @@ import { Link } from 'react-router-dom'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { db } from '../db'
 import { buildContractRows, needsAttention, renewalText } from '../lib/contracts'
-import { formatDate, formatMonth, today, yen } from '../lib/date'
+import { formatDate, formatMonth, formatYear, today, yen } from '../lib/date'
 import { buildMonthRows, summarize, thisMonth } from '../lib/rent'
 import { hasSampleData, removeSample } from '../lib/sample'
 import { buildVacancyRows, countStates } from '../lib/vacancy'
+import { buildYear } from '../lib/yearly'
 import s from './Home.module.css'
 
 /**
@@ -19,6 +20,7 @@ import s from './Home.module.css'
 export default function Home() {
   const [busy, setBusy] = useState(false)
   const month = thisMonth()
+  const year = Number(month.slice(0, 4))
 
   const view = useLiveQuery(async () => {
     const [rooms, leases, tenants, rentTerms, payments, expenses, sample, lastShare] = await Promise.all([
@@ -26,7 +28,8 @@ export default function Home() {
       db.leases.toArray(),
       db.tenants.toArray(),
       db.rentTerms.toArray(),
-      db.payments.where('month').equals(month).toArray(),
+      // 今年ぶんをまとめて読む。②の集計は buildMonthRows が月で絞るので、これで足りる
+      db.payments.where('month').between(`${year}-01`, `${year}-12`, true, true).toArray(),
       db.expenses.toArray(),
       hasSampleData(),
       db.meta.get('lastShareAt'),
@@ -36,10 +39,11 @@ export default function Home() {
       renewals: needsAttention(buildContractRows({ leases, rooms, tenants, rentTerms })),
       expenses: expenses.filter((e) => !e.deletedAt).length,
       vacant: countStates(buildVacancyRows({ rooms, leases, tenants })).vacant,
+      yearNet: buildYear({ year, rooms, leases, rentTerms, payments, expenses }).net,
       lastShareAt: lastShare?.value,
       sample,
     }
-  }, [month])
+  }, [month, year])
 
   const unpaid = view?.money.unpaid ?? []
   const renewals = view?.renewals ?? []
@@ -134,6 +138,15 @@ export default function Home() {
             </span>
           </Link>
         </div>
+
+        <Link className={s.keep} to="/yearly">
+          <span className={s.keepName}>年ごとのまとめ</span>
+          <span className={s.keepSub}>
+            {view
+              ? `${formatYear(year)}分は、いまのところ ${yen(view.yearNet)}`
+              : '確定申告のときに使います'}
+          </span>
+        </Link>
 
         <Link className={s.keep} to="/backup">
           <span className={s.keepName}>控えを家族に送る・印刷する</span>
