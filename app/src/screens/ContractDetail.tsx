@@ -66,8 +66,9 @@ export default function ContractDetail() {
   }
 
   const { lease, room, tenant, terms, notes } = data
-  const end = lease.movedOutOn ?? lease.endDate
-  const living = end >= today()
+  const now = today()
+  const living = (lease.movedOutOn ?? lease.endDate) >= now
+  const future = lease.startDate > now
   const { days } = renewalLevel(lease.endDate)
   const current = terms[0]
 
@@ -90,7 +91,7 @@ export default function ContractDetail() {
       <section className={`${s.head} ${living ? '' : s.endedHead}`}>
         <div className={s.name}>{tenant?.name ?? '（名前なし）'}</div>
         <div className={s.kana}>{tenant?.kana}</div>
-        <div className={s.renewal}>{renewalText(living, days)}</div>
+        <div className={s.renewal}>{renewalText({ living, future, days, lease })}</div>
       </section>
 
       {tenant?.contactNote && (

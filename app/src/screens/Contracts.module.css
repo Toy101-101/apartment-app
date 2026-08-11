@@ -51,6 +51,11 @@
 .red { border-left-color: var(--danger); }
 .yellow { border-left-color: var(--warn); }
 .none { border-left-color: var(--ok); }
+/* 更新して作った、まだ始まっていない契約 */
+.future {
+  border-left-color: var(--brand);
+  background: var(--brand-weak);
+}
 .ended {
   border-color: var(--line-soft);
   border-left-color: var(--line-soft);
@@ -83,6 +88,7 @@
 .red .renewal { color: var(--danger); }
 .yellow .renewal { color: var(--warn); }
 .none .renewal { color: var(--ok); }
+.future .renewal { color: var(--brand); }
 .ended .renewal { color: var(--ink-2); }
 
 .period {

@@ -73,7 +73,7 @@ export default function Home() {
                   <Link to={`/contracts/${r.lease.id}`}>
                     {r.room?.roomNo}号室 {r.tenant?.name}
                     <span className={r.level === 'red' ? s.soonRed : s.soonYellow}>
-                      {renewalText(r.living, r.days)}
+                      {renewalText(r)}
                     </span>
                   </Link>
                 </li>

@@ -2,7 +2,7 @@ import {
   compact, db, newId, now,
   type Lease, type Note, type NoteTarget, type RentTerm, type Room, type Tenant,
 } from '../db'
-import { addDays, today } from './date'
+import { addDays, formatDate, today } from './date'
 import { monthOf, renewalLevel, rentTermFor, type RenewalLevel } from './rent'
 
 /**
@@ -23,10 +23,12 @@ export interface ContractRow {
   lease: Lease
   room?: Room
   tenant?: Tenant
-  /** 今月の家賃＋管理費 */
+  /** 家賃＋管理費 */
   rent: number
-  /** 今日の時点で契約が続いているか */
+  /** 今日の時点で契約が続いているか（これから始まる契約も含む） */
   living: boolean
+  /** まだ始まっていない契約（更新して作った次の契約） */
+  future: boolean
   level: RenewalLevel
   /** 更新まであと何日（過ぎていれば負の数） */
   days: number
@@ -55,7 +57,13 @@ export function buildContractRows({
   const rows = leases
     .filter((l) => !l.deletedAt)
     .map((lease): ContractRow => {
-      const term = rentTermFor(rentTerms.filter((t) => t.leaseId === lease.id), month)
+      // まだ始まっていない契約は「今月の家賃」が無いので、始まる月の額を出す。
+      // そうしないと、更新して作った次の契約が ¥0 と表示されてしまう
+      const startMonth = monthOf(lease.startDate)
+      const term = rentTermFor(
+        rentTerms.filter((t) => t.leaseId === lease.id),
+        month < startMonth ? startMonth : month,
+      )
       const end = lease.movedOutOn ?? lease.endDate
       const { level, days } = renewalLevel(lease.endDate, from)
       return {
@@ -64,6 +72,7 @@ export function buildContractRows({
         tenant: tenantById.get(lease.tenantId),
         rent: term ? term.rent + term.mgmtFee : 0,
         living: end >= from,
+        future: lease.startDate > from,
         level,
         days,
       }
@@ -77,16 +86,22 @@ export function buildContractRows({
 }
 
 /** 更新までを言葉にする（数字だけ出しても、急ぐのかどうかが分からない） */
-export function renewalText(living: boolean, days: number): string {
-  if (!living) return '契約は終わっています'
-  if (days < 0) return `更新の日を ${-days}日 過ぎています`
-  if (days === 0) return '今日が更新の日です'
-  return `あと${days}日で契約更新`
+export function renewalText(
+  row: Pick<ContractRow, 'living' | 'future' | 'days' | 'lease'>,
+): string {
+  if (row.future) return `${formatDate(row.lease.startDate)}から始まります`
+  if (!row.living) return '契約は終わっています'
+  if (row.days < 0) return `更新の日を ${-row.days}日 過ぎています`
+  if (row.days === 0) return '今日が更新の日です'
+  return `あと${row.days}日で契約更新`
 }
 
-/** 更新の知らせを出すべき契約（60日以内。ホームの警告に使う） */
+/**
+ * 更新の知らせを出すべき契約（60日以内）。
+ * まだ始まっていない契約は知らせない（更新はもう済んでいるため）。
+ */
 export function needsAttention(rows: ContractRow[]): ContractRow[] {
-  return rows.filter((r) => r.living && r.level !== 'none')
+  return rows.filter((r) => r.living && !r.future && r.level !== 'none')
 }
 
 // --- データベースの読み書き -----------------------------------------------

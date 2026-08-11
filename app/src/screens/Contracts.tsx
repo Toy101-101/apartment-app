@@ -63,7 +63,7 @@ export default function Contracts() {
 }
 
 function ContractCard({ row }: { row: ContractRow }) {
-  const tone = row.living ? s[row.level] : s.ended
+  const tone = !row.living ? s.ended : row.future ? s.future : s[row.level]
   return (
     <Link className={`${s.card} ${tone}`} to={`/contracts/${row.lease.id}`}>
       <div className={s.head}>
@@ -71,11 +71,9 @@ function ContractCard({ row }: { row: ContractRow }) {
         <span className={s.name}>{row.tenant?.name ?? '（名前なし）'}</span>
       </div>
       <div className={`${s.rent} num`}>{yen(row.rent)}／月</div>
-      <div className={s.renewal}>{renewalText(row.living, row.days)}</div>
+      <div className={s.renewal}>{renewalText(row)}</div>
       <div className={s.period}>
-        {row.living
-          ? `${formatDate(row.lease.endDate)}まで`
-          : `${formatDate(row.lease.movedOutOn ?? row.lease.endDate)}まで`}
+        {formatDate(row.lease.movedOutOn ?? row.lease.endDate)}まで
       </div>
     </Link>
   )

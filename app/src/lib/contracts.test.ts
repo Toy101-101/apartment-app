@@ -4,7 +4,7 @@ import { describe, it, expect, beforeEach } from 'vitest'
 import { db } from '../db'
 import {
   addNote, buildContractRows, cancelEndLease, changeRent, createContract, endLease,
-  needsAttention, removeNote, renewLease, sortNotes, updateContract,
+  needsAttention, removeNote, renewLease, renewalText, sortNotes, updateContract,
   type ContractInput,
 } from './contracts'
 import { buildMonthRows } from './rent'
@@ -278,6 +278,35 @@ describe('一覧の並びと知らせ', () => {
     const rows = await rowsNow('2026-08-11')
     expect(rows[0].rent).toBe(58000)
     expect(rows[0].tenant?.name).toBe('乙')
+  })
+
+  it('更新して作った先の契約は「これから始まる」扱いで、家賃も0円にならない', async () => {
+    const id = await createContract({ ...INPUT, endDate: '2026-09-30' })
+    await renewLease(id, { endDate: '2028-09-30', rent: 60000, mgmtFee: 3000 })
+
+    const rows = await rowsNow('2026-08-11')
+    const next = rows.find((r) => r.future)
+    expect(next).toBeDefined()
+    expect(next!.living).toBe(true)
+    // まだ始まっていないので「今月の家賃」は無い。始まる月の額を出す
+    expect(next!.rent).toBe(63000)
+  })
+
+  it('これから始まる契約は、更新の知らせに出さない（更新はもう済んでいる）', async () => {
+    const id = await createContract({ ...INPUT, endDate: '2026-09-30' })
+    await renewLease(id, { endDate: '2028-09-30' })
+
+    const rows = await rowsNow('2026-08-11')
+    expect(needsAttention(rows).map((r) => r.lease.id)).toStrictEqual([id])
+  })
+
+  it('言葉は、状態ごとに変わる', async () => {
+    const id = await createContract({ ...INPUT, endDate: '2026-09-30' })
+    await renewLease(id, { endDate: '2028-09-30' })
+
+    const rows = await rowsNow('2026-08-11')
+    expect(renewalText(rows.find((r) => !r.future)!)).toBe('あと50日で契約更新')
+    expect(renewalText(rows.find((r) => r.future)!)).toBe('令和8年10月1日（木）から始まります')
   })
 })
 
