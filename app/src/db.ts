@@ -191,9 +191,19 @@ export function newId(): string {
   return crypto.randomUUID()
 }
 
-/** 作った時刻・直した時刻に入れる文字列 */
+let lastNow = ''
+
+/**
+ * 作った時刻・直した時刻に入れる文字列。
+ *
+ * 同じミリ秒のうちに2回呼ばれても、必ず前より後の時刻を返す。
+ * 時刻が並ぶと「どちらが先か」が決められなくなり、
+ * 操作の履歴が入れかわって表示されてしまうため。
+ */
 export function now(): string {
-  return new Date().toISOString()
+  const iso = new Date().toISOString()
+  lastNow = iso > lastNow ? iso : new Date(Date.parse(lastNow) + 1).toISOString()
+  return lastNow
 }
 
 export async function setMeta(key: string, value: string): Promise<void> {

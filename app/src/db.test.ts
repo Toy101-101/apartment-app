@@ -10,6 +10,16 @@ import { describe, it, expect } from 'vitest'
  * 「その前の版で入れたものが残るか」を必ずここに足していくこと。
  * 祖父のスマホには、作り直せない記録が入っている。
  */
+describe('記録した時刻', () => {
+  it('立て続けに呼んでも、必ず前より後になる（履歴の前後が入れかわらない）', async () => {
+    const { now } = await import('./db')
+    const stamps = Array.from({ length: 500 }, () => now())
+    const sorted = [...stamps].sort()
+    expect(stamps).toStrictEqual(sorted)
+    expect(new Set(stamps).size).toBe(stamps.length)
+  })
+})
+
 describe('表を足したときの引き継ぎ', () => {
   it('版1（meta だけ）で保存したものが、版2に上がっても残る', async () => {
     // まず、フェーズ0のアプリと同じ形でデータベースを作って中身を入れる

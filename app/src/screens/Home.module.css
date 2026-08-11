@@ -51,6 +51,38 @@
   margin: 0;
 }
 
+/* 急ぐことがある日だけ、枠ごと赤くする */
+.noticeWarn {
+  border-color: var(--danger);
+  background: var(--danger-weak);
+}
+.noticeAlert {
+  margin: 0;
+  font-size: var(--fs-body);
+  font-weight: 800;
+  color: var(--danger);
+  line-height: 1.6;
+}
+.noticeRooms {
+  display: block;
+  font-size: var(--fs-sub);
+  font-weight: 700;
+}
+.noticeBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: var(--tap);
+  margin-top: var(--sp-3);
+  border: var(--border) solid var(--danger);
+  border-radius: var(--radius);
+  background: var(--danger);
+  color: #fff;
+  font-size: var(--fs-body);
+  font-weight: 800;
+  text-decoration: none;
+}
+
 /* --- 4つの入口（2列） --- */
 .grid {
   display: grid;
@@ -67,6 +99,7 @@
   border-radius: var(--radius);
   color: #fff;
   text-align: left;
+  text-decoration: none; /* Link で使う入口のため */
 }
 .tileNo {
   font-size: var(--fs-sub);
@@ -98,70 +131,41 @@
   cursor: not-allowed;
 }
 
-/* --- 控えを家族に送る --- */
-.backup {
-  margin-top: var(--sp-5);
-  border: var(--border) solid var(--line);
+/* --- 作っている間だけの欄（入居者の登録画面ができたら丸ごと消す） --- */
+.dev {
+  margin-top: var(--sp-6);
+  border: var(--border) dashed var(--line-soft);
   border-radius: var(--radius);
   padding: var(--sp-4);
 }
-.backupTitle {
+.devTitle {
   margin: 0 0 var(--sp-2);
-  font-size: var(--fs-title);
+  font-size: var(--fs-lead);
   font-weight: 800;
+  color: var(--ink-2);
 }
-.backupNote {
+.devNote {
   margin: 0 0 var(--sp-3);
   font-size: var(--fs-sub);
   color: var(--ink-2);
-  line-height: 1.8;
-}
-.backupList {
-  margin: 0 0 var(--sp-4);
-  padding: 0;
-  list-style: none;
-  font-size: var(--fs-sub);
-}
-.backupList li {
-  display: flex;
-  justify-content: space-between;
-  gap: var(--sp-3);
-  padding: var(--sp-2) 0;
-  border-bottom: 1px solid var(--line-soft);
-}
-.backupList li:last-child { border-bottom: none; }
-.backupList b { font-weight: 800; }
-
-.backupBtn {
-  display: block;
-  width: 100%;
-  min-height: var(--tap);
-  padding: var(--sp-2) var(--sp-3);
-  border: var(--border) solid var(--brand-dark);
-  border-radius: var(--radius);
-  background: var(--brand);
-  color: #fff;
-  font-size: var(--fs-body);
-  font-weight: 800;
-}
-.backupBtn:disabled {
-  background: var(--brand-weak);
-  color: var(--brand);
-  cursor: progress;
-}
-
-/* 結果の一行。文が出ても消えても、下の文字が動かないように高さを確保する */
-.backupResult {
-  min-height: calc(var(--fs-lead) * 1.8);
-  margin: var(--sp-3) 0 0;
-  font-size: var(--fs-lead);
-  font-weight: 800;
-  color: var(--ok);
-  line-height: 1.8;
-}
-.backupSmall {
-  margin: var(--sp-2) 0 0;
-  font-size: var(--fs-sub);
-  color: var(--ink-2);
   line-height: 1.7;
+}
+.devRow {
+  display: flex;
+  gap: var(--sp-3);
+}
+.devRow button {
+  flex: 1;
+  min-height: var(--tap);
+  padding: var(--sp-2);
+  border: var(--border) solid var(--line-soft);
+  border-radius: var(--radius);
+  background: #fff;
+  color: var(--ink-2);
+  font-size: var(--fs-sub);
+  font-weight: 800;
+}
+.devRow button:disabled {
+  opacity: 0.5;
+  cursor: progress;
 }

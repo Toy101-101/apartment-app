@@ -1,57 +1,41 @@
 import { useState } from 'react'
+import { Link } from 'react-router-dom'
 import { useLiveQuery } from 'dexie-react-hooks'
-import { db, setMeta } from '../db'
-import { shareBackup } from '../lib/backup'
-import { formatDate, today } from '../lib/date'
+import { db } from '../db'
+import { formatDate, formatMonth, today, yen } from '../lib/date'
+import { buildMonthRows, summarize, thisMonth } from '../lib/rent'
+import { clearSample, loadSample } from '../lib/sample'
 import s from './Home.module.css'
 
 /**
  * ホーム画面
  *
- * 4つの入口はまだ押せない（中身が無いため）。
- * 代わりに置いてあるのは「控えを家族に送る」欄で、これは作りかけの仮の欄ではない。
- * iOSはホーム画面のアイコンを消すと中のデータも消えるため、
- * 記録を入れ始める前から、いつでも控えを取り出せる状態にしておく必要がある。
+ * 開いてすぐ分かるべきは「今日、急いですることがあるか」だけ。
+ * いま出せるのは家賃の未入金のみ（契約更新の警告はフェーズ3で足す）。
+ *
+ * いちばん下の「作っている間だけの欄」は、入居者を登録する画面ができたら丸ごと消す。
  */
 export default function Home() {
-  const [message, setMessage] = useState('')
   const [busy, setBusy] = useState(false)
+  const month = thisMonth()
 
-  // 端末に入っている件数と、最後に控えを送った日（画面は自動で更新される）
-  const stat = useLiveQuery(async () => {
-    const [tenants, leases, payments, expenses, notes, photos, lastShareAt] = await Promise.all([
-      db.tenants.count(),
-      db.leases.count(),
-      db.payments.count(),
-      db.expenses.count(),
-      db.notes.count(),
-      db.photos.count(),
-      db.meta.get('lastShareAt'),
+  const summary = useLiveQuery(async () => {
+    const [rooms, leases, tenants, rentTerms, payments] = await Promise.all([
+      db.rooms.toArray(),
+      db.leases.toArray(),
+      db.tenants.toArray(),
+      db.rentTerms.toArray(),
+      db.payments.where('month').equals(month).toArray(),
     ])
-    return {
-      records: tenants + leases + payments + expenses + notes,
-      photos,
-      lastShareAt: lastShareAt?.value,
-    }
-  }, [])
+    return summarize(buildMonthRows({ month, rooms, leases, tenants, rentTerms, payments }))
+  }, [month])
 
-  async function handleShare() {
+  const unpaid = summary?.unpaid ?? []
+
+  async function handleSample(load: boolean) {
     setBusy(true)
-    setMessage('')
     try {
-      const result = await shareBackup()
-      if (result === 'cancelled') {
-        setMessage('送るのをやめました。')
-        return
-      }
-      await setMeta('lastShareAt', today())
-      setMessage(
-        result === 'shared'
-          ? '控えを送りました。'
-          : '控えをこの端末に保存しました。（ダウンロードの中にあります）',
-      )
-    } catch {
-      setMessage('うまくいきませんでした。もう一度お試しください。')
+      await (load ? loadSample() : clearSample())
     } finally {
       setBusy(false)
     }
@@ -64,9 +48,23 @@ export default function Home() {
       </header>
 
       <main className={s.body}>
-        <section className={s.notice}>
+        <section className={`${s.notice} ${unpaid.length ? s.noticeWarn : ''}`}>
           <p className={s.noticeHead}>{formatDate(today())}</p>
-          <p className={s.noticeCalm}>今日は、急いですることはありません</p>
+          {unpaid.length === 0 ? (
+            <p className={s.noticeCalm}>今日は、急いですることはありません</p>
+          ) : (
+            <>
+              <p className={s.noticeAlert}>
+                {formatMonth(month)}の家賃が、{unpaid.length}件まだです
+                <span className={s.noticeRooms}>
+                  （{unpaid.map((r) => `${r.room.roomNo}号室`).join('・')}）
+                </span>
+              </p>
+              <Link className={s.noticeBtn} to="/payments">
+                家賃の入金をひらく
+              </Link>
+            </>
+          )}
         </section>
 
         <div className={s.grid}>
@@ -77,13 +75,19 @@ export default function Home() {
               <span className={s.tileSub}>準備中</span>
             </span>
           </button>
-          <button className={`${s.tile} ${s.t2}`} disabled>
+          <Link className={`${s.tile} ${s.t2}`} to="/payments">
             <span className={s.tileNo}>②</span>
             <span>
               <span className={s.tileName}>家賃の入金</span>
-              <span className={s.tileSub}>準備中</span>
+              <span className={s.tileSub}>
+                {summary
+                  ? unpaid.length === 0
+                    ? `今月ぶん ${yen(summary.received)}`
+                    : `まだ ${unpaid.length}件`
+                  : '…'}
+              </span>
             </span>
-          </button>
+          </Link>
           <button className={`${s.tile} ${s.t3}`} disabled>
             <span className={s.tileNo}>③</span>
             <span>
@@ -100,38 +104,21 @@ export default function Home() {
           </button>
         </div>
 
-        <section className={s.backup}>
-          <h2 className={s.backupTitle}>控えを家族に送る</h2>
-          <p className={s.backupNote}>
-            記録はこのスマホの中だけにあります。
-            機種変更や、ホーム画面からアイコンを消したときに消えてしまわないよう、
-            ときどき控えを家族に送っておいてください。
+        <section className={s.dev}>
+          <h2 className={s.devTitle}>作っている間だけの欄</h2>
+          <p className={s.devNote}>
+            入居者を登録する画面はこれから作ります。それまでのあいだ、
+            架空の10部屋を入れて動きを試せるようにしてあります。
+            実際の入居者を登録できるようになったら、この欄は消えます。
           </p>
-          <ul className={s.backupList}>
-            <li>
-              <span>いまの記録</span>
-              <b className="num">{stat ? `${stat.records} 件` : '…'}</b>
-            </li>
-            <li>
-              <span>写真</span>
-              <b className="num">{stat ? `${stat.photos} 枚` : '…'}</b>
-            </li>
-            <li>
-              <span>最後に送った日</span>
-              <b className="num">
-                {stat?.lastShareAt ? formatDate(stat.lastShareAt) : 'まだ送っていません'}
-              </b>
-            </li>
-          </ul>
-          <button className={s.backupBtn} onClick={handleShare} disabled={busy}>
-            {busy ? '用意しています…' : '控えを家族に送る'}
-          </button>
-          <p className={s.backupResult} role="status" aria-live="polite">
-            {message}
-          </p>
-          <p className={s.backupSmall}>
-            写真は大きいため、控えのファイルには入りません（別に送ります）。
-          </p>
+          <div className={s.devRow}>
+            <button onClick={() => handleSample(true)} disabled={busy}>
+              見本データを入れる
+            </button>
+            <button onClick={() => handleSample(false)} disabled={busy}>
+              全部消す
+            </button>
+          </div>
         </section>
       </main>
     </div>

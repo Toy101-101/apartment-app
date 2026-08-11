@@ -1,0 +1,258 @@
+/* ② 家賃の入金（A案の構造・C案の寸法） */
+
+.shell {
+  max-width: 520px;
+  margin: 0 auto;
+  min-height: 100dvh;
+  background: var(--surface);
+  /* 取り消しの帯にいちばん下の内容が隠れないよう、あらかじめ空けておく */
+  padding-bottom: 96px;
+}
+
+.bar {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  min-height: 72px;
+  padding: var(--sp-2) var(--sp-3);
+  padding-top: calc(var(--sp-2) + env(safe-area-inset-top));
+  background: var(--brand);
+  color: #fff;
+  border-bottom: 4px solid var(--brand-dark);
+}
+.back,
+.backSpacer {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 56px;
+  min-height: var(--tap);
+  border-radius: var(--radius);
+  color: #fff;
+  font-size: 2rem;
+  font-weight: 800;
+  line-height: 1;
+  text-decoration: none;
+}
+.back:active { background: var(--brand-dark); }
+.barTitle {
+  flex: 1;
+  text-align: center;
+  font-size: var(--fs-title);
+  font-weight: 800;
+}
+
+.body {
+  padding: var(--sp-4);
+}
+
+/* --- 月送り --- */
+.monthBar {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  margin-bottom: var(--sp-4);
+}
+.monthBar button {
+  min-width: 72px;
+  min-height: var(--tap);
+  border: var(--border) solid var(--brand);
+  border-radius: var(--radius);
+  background: var(--brand-weak);
+  color: var(--brand);
+  font-size: var(--fs-big);
+  font-weight: 800;
+}
+.monthBar button:disabled {
+  border-color: var(--line-soft);
+  background: #fff;
+  color: var(--line-soft);
+  cursor: not-allowed;
+}
+.monthLabel {
+  flex: 1;
+  text-align: center;
+  font-size: var(--fs-big);
+  font-weight: 800;
+}
+
+.lead {
+  margin: 0 0 var(--sp-4);
+  font-size: var(--fs-sub);
+  color: var(--ink-2);
+  line-height: 1.7;
+}
+.loading,
+.empty {
+  margin: var(--sp-5) 0;
+  font-size: var(--fs-lead);
+  color: var(--ink-2);
+  line-height: 1.8;
+}
+
+/* --- 部屋ごとの1行 --- */
+.row {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  border: var(--border) solid var(--line);
+  border-radius: var(--radius);
+  padding: var(--sp-2) var(--sp-3);
+  margin-bottom: var(--sp-3);
+}
+.vacantRow {
+  border-color: var(--line-soft);
+  background: #f6f7f8;
+}
+.who {
+  flex: 1;
+  min-width: 0;
+}
+.roomNo {
+  font-size: var(--fs-title);
+  font-weight: 800;
+  margin-right: var(--sp-2);
+}
+.name {
+  font-size: var(--fs-lead);
+  color: var(--ink-2);
+}
+.rent {
+  font-size: var(--fs-lead);
+  margin-top: var(--sp-1);
+}
+.paidOn {
+  font-size: var(--fs-sub);
+  color: var(--ink-2);
+}
+
+/* 「済」は静かに、「未」を強く。注意を向けるべきは未払いのほう */
+.toggle {
+  min-width: 132px;
+  min-height: 76px;
+  border: var(--border) solid;
+  border-radius: var(--radius);
+  font-size: var(--fs-body);
+  font-weight: 800;
+}
+.yes {
+  background: var(--ok-weak);
+  color: var(--ok);
+  border-color: var(--ok);
+}
+.no {
+  background: var(--danger-weak);
+  color: var(--danger);
+  border-color: var(--danger);
+}
+.vacantMark {
+  min-width: 132px;
+  text-align: center;
+  font-size: var(--fs-lead);
+  font-weight: 800;
+  color: var(--ink-2);
+}
+
+/* --- まとめ --- */
+.summary {
+  border: var(--border) solid var(--line);
+  border-radius: var(--radius);
+  background: #fafbfc;
+  padding: var(--sp-3) var(--sp-4);
+  margin-top: var(--sp-4);
+  font-size: var(--fs-lead);
+}
+.summary b {
+  font-size: var(--fs-huge);
+  font-weight: 800;
+}
+.expected {
+  font-size: var(--fs-sub);
+  color: var(--ink-2);
+}
+.allPaid {
+  margin: var(--sp-2) 0 0;
+  color: var(--ok);
+  font-weight: 800;
+}
+.someUnpaid {
+  margin: var(--sp-2) 0 0;
+  color: var(--danger);
+  font-weight: 800;
+  line-height: 1.7;
+}
+
+/* --- 最近の操作 --- */
+.history {
+  margin-top: var(--sp-5);
+  border-top: 1px solid var(--line-soft);
+  padding-top: var(--sp-3);
+}
+.historyTitle {
+  margin: 0 0 var(--sp-2);
+  font-size: var(--fs-lead);
+  font-weight: 800;
+}
+.history ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-size: var(--fs-sub);
+  color: var(--ink-2);
+}
+.history li {
+  display: flex;
+  gap: var(--sp-3);
+  padding: var(--sp-2) 0;
+  border-bottom: 1px solid var(--line-soft);
+}
+.history li:last-child { border-bottom: none; }
+
+/* --- ホームにもどる（片手持ちの親指が届く下端に置く） --- */
+.home {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: var(--tap);
+  margin-top: var(--sp-5);
+  border: var(--border) solid var(--brand);
+  border-radius: var(--radius);
+  background: var(--brand-weak);
+  color: var(--brand);
+  font-size: var(--fs-body);
+  font-weight: 800;
+  text-decoration: none;
+}
+
+/* --- 取り消しの帯（5秒） --- */
+.undoBar {
+  position: fixed;
+  left: 50%;
+  bottom: 0;
+  transform: translateX(-50%);
+  width: 100%;
+  max-width: 520px;
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  padding: var(--sp-3) var(--sp-4);
+  padding-bottom: calc(var(--sp-3) + env(safe-area-inset-bottom));
+  background: var(--ink);
+  color: #fff;
+  font-size: var(--fs-lead);
+  font-weight: 700;
+}
+.undoBar span { flex: 1; }
+.undoBar button {
+  min-height: var(--tap);
+  padding: 0 var(--sp-4);
+  border: var(--border) solid #fff;
+  border-radius: var(--radius);
+  background: transparent;
+  color: #fff;
+  font-size: var(--fs-body);
+  font-weight: 800;
+}
