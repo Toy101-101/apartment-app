@@ -118,6 +118,7 @@ export default function EquipmentForm() {
       await replaceEquipment(id, {
         date: replacedOn,
         amount: yenAmount > 0 ? yenAmount : undefined,
+        lifeYears,
         maker, model, memo,
       })
       navigate('/equipment')

@@ -1,4 +1,5 @@
 import Dexie, { type Table } from 'dexie'
+import { DB_NAME } from './lib/demo'
 
 /**
  * 端末の中のデータベース（IndexedDB）
@@ -240,8 +241,12 @@ export class AppDB extends Dexie {
   equipment!: Table<Equipment, string>
   moveOuts!: Table<MoveOut, string>
 
-  constructor() {
-    super('apartment')
+  /**
+   * 置き場所の名前を外から渡せるようにしてある。
+   * 見本モード（`?demo=1`）では別の名前を使い、本物の記録と決して混ざらないようにする。
+   */
+  constructor(name: string = DB_NAME) {
+    super(name)
     // 以降、表を足すときは version(3), version(4)... と増やしていく（既存データは消さない）
     this.version(1).stores({
       meta: '&key',

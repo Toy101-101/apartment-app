@@ -2,6 +2,9 @@ import { StrictMode, useLayoutEffect } from 'react'
 import { createRoot } from 'react-dom/client'
 import { HashRouter, Routes, Route, useLocation } from 'react-router-dom'
 import './styles/tokens.css'
+import { DemoBanner } from './components/DemoBanner'
+import { IS_DEMO } from './lib/demo'
+import { hasSampleData, loadSample } from './lib/sample'
 import Backup from './screens/Backup'
 import ContractDetail from './screens/ContractDetail'
 import ContractForm from './screens/ContractForm'
@@ -43,12 +46,32 @@ function ScrollToTop() {
 // どの画面もいちばん上から始まる、という1つの決まりにそろえる
 if ('scrollRestoration' in history) history.scrollRestoration = 'manual'
 
+/**
+ * 見本モードのときは、画面を出す前に架空の10部屋を入れておく。
+ *
+ * 入れるのは**空のときだけ**。毎回入れ直すと、見て回っている途中で
+ * 画面を開き直しただけで操作が消え、確かめようが無くなる。
+ * 最初にもどしたいときは、帯の中のボタンから。
+ *
+ * ここで使う置き場は `apartment-demo`（`lib/demo.ts`）。本物とは別なので、
+ * 中身を消してから入れるこの処理が、本物の記録に届くことはない。
+ */
+async function prepare() {
+  if (!IS_DEMO) return
+  try {
+    if (!(await hasSampleData())) await loadSample()
+  } catch {
+    // 見本を入れられなくても、画面自体は出す（空の画面のほうが、真っ白よりましなため）
+  }
+}
+
 // GitHub Pages では直接URLを開くと404になるため、
 // 通常の BrowserRouter ではなく HashRouter を使う（URLに # が入る）
-createRoot(document.getElementById('root')!).render(
+void prepare().then(() => createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <HashRouter>
       <ScrollToTop />
+      {IS_DEMO && <DemoBanner />}
       <Routes>
         <Route path="/" element={<Home />} />
         <Route path="/payments" element={<Payments />} />
@@ -80,4 +103,4 @@ createRoot(document.getElementById('root')!).render(
       </Routes>
     </HashRouter>
   </StrictMode>,
-)
+))

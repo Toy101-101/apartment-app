@@ -1,14 +1,23 @@
-import { db, type Lease, type Note, type Payment, type RentTerm, type Room, type Tenant } from '../db'
+import {
+  db,
+  type Equipment, type Expense, type Lease, type MoveOut, type Note,
+  type Payment, type RentTerm, type Room, type Schedule, type Tenant,
+} from '../db'
 
 /**
  * 見本データ（架空の10部屋）
  *
  * 入居者を登録する画面ができたので、**入れるボタンは画面から外した**。
  * 本物の記録が入っている端末で誤って押されたら、全部消えてしまうため。
- * いまも残してあるのは次の2つのため。
+ * いまも残してあるのは次の3つのため。
  *
  * 1. 試験（`sample.test.ts`）で、現実に近い10部屋ぶんの計算を毎回確かめる
  * 2. すでに見本を入れてしまった端末から、**見本だけを選んで消す**（`removeSample`）
+ * 3. 見本モード（`?demo=1`）で、中身の入った画面を見せる。
+ *    こちらは**別の置き場**を使うので、本物の記録には触れない（`lib/demo.ts`）
+ *
+ * 中身は①〜⑥のすべてに行きわたらせてある。どれか1つでも空だと、
+ * 見た人がその機能を「まだ無い」と受け取ってしまうため。
  *
  * 名前・電話番号はすべて**架空**（mockup.html と同じ顔ぶれ）。実在の入居者は入れない。
  */
@@ -32,6 +41,9 @@ const rooms: Room[] = [
 const tenants: Tenant[] = [
   { id: 't-101', ...base, name: '田中 一郎', kana: 'たなか いちろう', phone: '090-1234-5678',
     guarantorName: '田中 幸子（妻）', guarantorPhone: '090-1234-9999' },
+  { id: 't-102', ...base, name: '渡辺 大樹', kana: 'わたなべ だいき', phone: '090-7777-8888',
+    guarantorName: '渡辺 隆（父）', guarantorPhone: '090-7777-1111',
+    contactNote: '2026年6月末に退去。大学卒業にともなう転居' },
   { id: 't-103', ...base, name: '佐藤 花子', kana: 'さとう はなこ', phone: '080-2222-3333',
     guarantorName: '佐藤 健（長男）', guarantorPhone: '080-2222-1111',
     contactNote: '入金が数日遅れることがあるが、これまで必ず月内に入っている。催促の電話はしないでよい、と本人と話がついている' },
@@ -60,6 +72,8 @@ const lease = (
 
 const leases: Lease[] = [
   lease('101', '2018-04-01', '2026-08-25', 110000, 55000),
+  // 102号室は2026年6月末に退去ずみ。退去の手続きが途中まで進んだ状態を見せるために入れてある
+  { ...lease('102', '2022-04-01', '2026-06-30', 108000, 54000), movedOutOn: '2026-06-30' },
   lease('103', '2021-10-01', '2026-09-30', 124000, 62000),
   lease('104', '2024-03-15', '2027-03-31', 116000, 58000),
   lease('105', '2019-09-05', '2026-10-05', 112000, 0),
@@ -77,6 +91,7 @@ const rentTerms: RentTerm[] = [
   // 101号室は家賃を下げた経緯を残してある。過去の月をひらけば当時の額が出る
   term('rt-101a', '101', '2018-04', 57000),
   term('rt-101b', '101', '2022-04', 55000, '長く住んでもらっているので、更新のときに2,000円下げた'),
+  term('rt-102', '102', '2022-04', 54000),
   term('rt-103', '103', '2021-10', 62000, '角部屋で日当たりが良いぶん、他より高め'),
   term('rt-104', '104', '2024-03', 58000),
   term('rt-105', '105', '2019-09', 56000),
@@ -86,8 +101,21 @@ const rentTerms: RentTerm[] = [
   term('rt-205', '205', '2020-11', 59000),
 ]
 
-/** その月に済にする部屋。ここに無い部屋は「未」（行そのものを作らない） */
+/**
+ * その月に済にする部屋。ここに無い部屋は「未」（行そのものを作らない）。
+ *
+ * 1月から入れてあるのは、**年ごとのまとめ**を見たときに1年ぶんが埋まるようにするため。
+ * 7月までしか無いと「付けはじめる前」の月ばかりになり、集計の画面が見られない。
+ */
+const ALL = ['101', '102', '103', '104', '105', '201', '202', '204', '205']
+
 const PAID: Record<string, string[]> = {
+  '2026-01': ALL,
+  '2026-02': ALL,
+  '2026-03': ALL,
+  '2026-04': ALL,
+  '2026-05': ALL,
+  '2026-06': ALL, // 102号室はここまで（6月末に退去）
   '2026-07': ['101', '103', '104', '105', '201', '202', '204', '205'],
   '2026-08': ['101', '104', '105', '201', '204', '205'], // 103と202がまだ
 }
@@ -123,38 +151,138 @@ const notes: Note[] = [
     body: '前の入居者（大学生）が卒業で退去。給湯器を新品に交換したので、募集のときは「給湯器新品」と出すこと。' },
 ]
 
+/**
+ * ③ 修繕・費用
+ *
+ * 「なぜ、この対応をしたか」が主役の画面なので、見本にも理由を必ず書いておく。
+ * 金額だけ並んでいる見本では、この画面の値打ちが伝わらない。
+ */
+const expenses: Expense[] = [
+  { id: 'ex-1', ...base, kind: 'repair', date: '2026-08-03', title: '台所の水漏れ',
+    amount: 18000, vendor: '○○水道', roomId: 'r-201', photoIds: [],
+    memo: '流しの下の継ぎ手から少しずつ漏れていた。床の板が黒く変わりかけていたので、\n早めに呼んで正解だった。同じ年式の部屋は、次の立会いのときに一緒に見ておく。' },
+  { id: 'ex-2', ...base, kind: 'fixed', date: '2026-07-31', title: '貯水槽の清掃',
+    amount: 38000, vendor: '××防災', photoIds: [],
+    memo: '年に1回。毎年7月末に頼んでいる。' },
+  { id: 'ex-3', ...base, kind: 'repair', date: '2026-07-18', title: '給湯器の取り替え',
+    amount: 182000, vendor: '△△工業', roomId: 'r-102', photoIds: [],
+    memo: '前のものは14年もった。直すこともできたが、部品代と工賃で8万円かかるうえ、\nあと何年もつか分からないと言われたので、空室のうちに新品へ替えた。\n入居中だと湯が止まる日が出るので、この判断でよかったと思う。' },
+  { id: 'ex-4', ...base, kind: 'repair', date: '2026-06-28', title: 'クロスの張り替え（102号室）',
+    amount: 68000, vendor: '○○内装', roomId: 'r-102', photoIds: [],
+    memo: '居室の一面に大きな傷。敷金から引くぶんは、退去の精算に別で入れてある\n（ここに入れた額は、こちらが業者に払った額）。' },
+  { id: 'ex-5', ...base, kind: 'fixed', date: '2026-05-20', title: '火災保険（1年分）',
+    amount: 48000, vendor: '□□損保', photoIds: [],
+    memo: '3年まとめのほうが安いが、建て替えを考える時期なので1年ごとにしている。' },
+  { id: 'ex-6', ...base, kind: 'repair', date: '2026-04-05', title: '共用灯をLEDに替えた',
+    amount: 32000, vendor: '△△電気', photoIds: [],
+    memo: '玄関と階段の6か所。切れるたびに脚立を出していたのが無くなった。\n電気代も月に千円ほど下がっている。' },
+  { id: 'ex-7', ...base, kind: 'fixed', date: '2026-02-25', title: '固定資産税（第4期）',
+    amount: 41000, photoIds: [] },
+]
+
+/**
+ * ⑤ 年間の予定
+ *
+ * 「過ぎているもの・近いもの・まだ先のもの」が1つずつ入るようにしてある。
+ * 全部まだ先だと、ホームのお知らせ枠に何も出ず、この機能が見えない。
+ */
+const schedules: Schedule[] = [
+  { id: 'sc-1', ...base, title: '消防設備点検', kind: 'inspection',
+    nextDate: '2026-08-08', everyMonths: 6, noticeDays: 60, amount: 33000, vendor: '××防災',
+    memo: '半年に1回。前回は2月。報告書は市役所に出す。' },
+  { id: 'sc-2', ...base, title: '固定資産税の納付', kind: 'tax',
+    nextDate: '2026-08-31', everyMonths: 3, noticeDays: 30, amount: 41000,
+    memo: '年4回。納付書は4月にまとめて届く。' },
+  { id: 'sc-3', ...base, title: '草刈り・剪定', kind: 'other',
+    nextDate: '2026-09-15', everyMonths: 6, noticeDays: 30, amount: 25000, vendor: '緑化サービス',
+    memo: '夏と秋の2回。裏の生垣が伸びると隣家に入るので、遅らせない。' },
+  { id: 'sc-4', ...base, title: '火災保険の更新', kind: 'insurance',
+    nextDate: '2027-05-20', everyMonths: 12, noticeDays: 60, amount: 48000, vendor: '□□損保',
+    memo: '落とすとその1年は無保険になる。早めに知らせる。' },
+  { id: 'sc-5', ...base, title: '貯水槽の清掃', kind: 'inspection',
+    nextDate: '2027-07-31', everyMonths: 12, noticeDays: 30, amount: 38000, vendor: '××防災' },
+]
+
+/**
+ * ⑥ 設備の年式
+ *
+ * 替え時を過ぎたもの（赤）・近いもの（黄）・まだ先のものを混ぜてある。
+ * 取り替えずみの1行も入れて、「前のは何年もったか」の履歴が見えるようにする。
+ */
+const equipment: Equipment[] = [
+  { id: 'eq-1', ...base, kind: 'waterHeater', roomId: 'r-101', installedOn: '2012-05',
+    lifeYears: 12, maker: '△△工業', model: 'GT-1650',
+    memo: '入居が長い部屋。止まる前に、次の空室を待たずに替えるか考えておく。' },
+  { id: 'eq-2', ...base, kind: 'aircon', roomId: 'r-203', installedOn: '2011-07',
+    lifeYears: 13, maker: '◇◇電機',
+    memo: '空室のうちに替える。この年式だと修理の部品がもう無い。' },
+  { id: 'eq-3', ...base, kind: 'waterHeater', roomId: 'r-103', installedOn: '2015-09',
+    lifeYears: 12, maker: '△△工業', model: 'GT-2050' },
+  { id: 'eq-4', ...base, kind: 'other', installedOn: '2004-04', lifeYears: 22,
+    maker: '受水槽（建物全体）',
+    memo: '清掃は毎年している。取り替えとなると大きな工事になるので、早めに見積りを取る。' },
+  { id: 'eq-5', ...base, kind: 'waterHeater', roomId: 'r-102', installedOn: '2026-07',
+    lifeYears: 12, maker: '△△工業', model: 'GT-2060',
+    memo: '2026年7月に新品へ交換。募集のときは「給湯器新品」と出す。' },
+  { id: 'eq-6', ...base, kind: 'aircon', roomId: 'r-204', installedOn: '2025-05',
+    lifeYears: 13, maker: '◇◇電機',
+    memo: '壁紙の張り替えと一緒に新品にした。' },
+  // 取り替えずみ（履歴として残る行）。eq-5 の前に付いていたもの
+  { id: 'eq-old-102', ...base, kind: 'waterHeater', roomId: 'r-102', installedOn: '2012-06',
+    lifeYears: 12, maker: '△△工業', model: 'GT-1650', replacedOn: '2026-07-18' },
+]
+
+/**
+ * 退去の立会いと敷金の精算
+ *
+ * 途中まで進んだ状態にしてある（7つのうち4つ済み）。
+ * 全部済んだ状態だと、ホームのお知らせにも出ず、この画面にたどり着けない。
+ */
+const moveOuts: MoveOut[] = [
+  { id: 'mo-102', ...base, leaseId: 'l-102',
+    done: ['appointment', 'inspected', 'photos', 'keys'],
+    deductions: [
+      { id: 'dd-1', title: 'クロスの張り替え（居室の一面）', amount: 40000,
+        reason: '家具をぶつけた大きな傷が壁の一面にあり、下地まで凹んでいた。\n'
+          + '普通に住んでいてつく傷とは言えないため、張り替えぶんを引く。\n'
+          + '写真を撮ってあり、本人にもその場で見てもらって納得を得ている。' },
+    ],
+    memo: '鍵は3本すべて返却ずみ。電気・ガス・水道の停止はこれから確かめる。' },
+]
+
+/**
+ * 見本が触る表の一式。
+ *
+ * 表を足したときは**ここにも足す**。書き忘れると、
+ * 入れかえたつもりの表に前の中身が残り、見本と本物が混ざった状態になる。
+ */
+const TABLES = () => [
+  db.rooms, db.tenants, db.leases, db.rentTerms, db.payments, db.paymentLog,
+  db.expenses, db.notes, db.schedules, db.equipment, db.moveOuts,
+]
+
 /** 本体の表（写真とmetaを除く）をまとめて入れかえる */
 export async function loadSample(): Promise<void> {
-  await db.transaction(
-    'rw',
-    [db.rooms, db.tenants, db.leases, db.rentTerms, db.payments, db.paymentLog, db.expenses, db.notes],
-    async () => {
-      await Promise.all([
-        db.rooms.clear(), db.tenants.clear(), db.leases.clear(), db.rentTerms.clear(),
-        db.payments.clear(), db.paymentLog.clear(), db.expenses.clear(), db.notes.clear(),
-      ])
-      await db.rooms.bulkPut(rooms)
-      await db.tenants.bulkPut(tenants)
-      await db.leases.bulkPut(leases)
-      await db.rentTerms.bulkPut(rentTerms)
-      await db.payments.bulkPut(buildPayments())
-      await db.notes.bulkPut(notes)
-    },
-  )
+  await db.transaction('rw', TABLES(), async () => {
+    await Promise.all(TABLES().map((t) => t.clear()))
+    await db.rooms.bulkPut(rooms)
+    await db.tenants.bulkPut(tenants)
+    await db.leases.bulkPut(leases)
+    await db.rentTerms.bulkPut(rentTerms)
+    await db.payments.bulkPut(buildPayments())
+    await db.notes.bulkPut(notes)
+    await db.expenses.bulkPut(expenses)
+    await db.schedules.bulkPut(schedules)
+    await db.equipment.bulkPut(equipment)
+    await db.moveOuts.bulkPut(moveOuts)
+  })
 }
 
 /** 本体の表を空にする（meta は残す）。試験でだけ使う */
 export async function clearSample(): Promise<void> {
-  await db.transaction(
-    'rw',
-    [db.rooms, db.tenants, db.leases, db.rentTerms, db.payments, db.paymentLog, db.expenses, db.notes],
-    async () => {
-      await Promise.all([
-        db.rooms.clear(), db.tenants.clear(), db.leases.clear(), db.rentTerms.clear(),
-        db.payments.clear(), db.paymentLog.clear(), db.expenses.clear(), db.notes.clear(),
-      ])
-    },
-  )
+  await db.transaction('rw', TABLES(), async () => {
+    await Promise.all(TABLES().map((t) => t.clear()))
+  })
 }
 
 /** 見本データが入っているか（入っている端末にだけ、消す案内を出すため） */
@@ -170,21 +298,21 @@ export async function hasSampleData(): Promise<boolean> {
  */
 export async function removeSample(): Promise<void> {
   const payments = buildPayments()
-  await db.transaction(
-    'rw',
-    [db.rooms, db.tenants, db.leases, db.rentTerms, db.payments, db.paymentLog, db.notes],
-    async () => {
-      // 見本の入金に対してつけた操作の履歴も、一緒に片づける
-      const paymentIds = new Set(payments.map((p) => p.id))
-      const logs = await db.paymentLog.toArray()
-      await db.paymentLog.bulkDelete(logs.filter((l) => paymentIds.has(l.paymentId)).map((l) => l.id))
+  await db.transaction('rw', TABLES(), async () => {
+    // 見本の入金に対してつけた操作の履歴も、一緒に片づける
+    const paymentIds = new Set(payments.map((p) => p.id))
+    const logs = await db.paymentLog.toArray()
+    await db.paymentLog.bulkDelete(logs.filter((l) => paymentIds.has(l.paymentId)).map((l) => l.id))
 
-      await db.rooms.bulkDelete(rooms.map((r) => r.id))
-      await db.tenants.bulkDelete(tenants.map((t) => t.id))
-      await db.leases.bulkDelete(leases.map((l) => l.id))
-      await db.rentTerms.bulkDelete(rentTerms.map((t) => t.id))
-      await db.payments.bulkDelete(payments.map((p) => p.id))
-      await db.notes.bulkDelete(notes.map((n) => n.id))
-    },
-  )
+    await db.rooms.bulkDelete(rooms.map((r) => r.id))
+    await db.tenants.bulkDelete(tenants.map((t) => t.id))
+    await db.leases.bulkDelete(leases.map((l) => l.id))
+    await db.rentTerms.bulkDelete(rentTerms.map((t) => t.id))
+    await db.payments.bulkDelete(payments.map((p) => p.id))
+    await db.notes.bulkDelete(notes.map((n) => n.id))
+    await db.expenses.bulkDelete(expenses.map((e) => e.id))
+    await db.schedules.bulkDelete(schedules.map((s) => s.id))
+    await db.equipment.bulkDelete(equipment.map((e) => e.id))
+    await db.moveOuts.bulkDelete(moveOuts.map((m) => m.id))
+  })
 }

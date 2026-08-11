@@ -270,6 +270,25 @@ describe('取り替える', () => {
     expect(result.lastedText).toBe('12年4か月')
   })
 
+  it('もつ年数を直して取り替えたら、その年数で新しい行を作る', async () => {
+    const id = await createEquipment({
+      kind: 'waterHeater', installedOn: '2014-04', lifeYears: 12,
+    })
+    // 前のが早く壊れたので、次は短めに見ておく、という直し方をした場合
+    const result = await replaceEquipment(id, { date: '2026-08-11', lifeYears: 15 })
+    expect((await db.equipment.get(result.newId))?.lifeYears).toBe(15)
+    // 前の行の年数は書きかえない
+    expect((await db.equipment.get(id))?.lifeYears).toBe(12)
+  })
+
+  it('もつ年数を入れなければ、前のものと同じにする', async () => {
+    const id = await createEquipment({
+      kind: 'aircon', installedOn: '2015-06', lifeYears: 18,
+    })
+    const result = await replaceEquipment(id, { date: '2026-08-11' })
+    expect((await db.equipment.get(result.newId))?.lifeYears).toBe(18)
+  })
+
   it('金額を入れれば、③修繕・費用に修繕として残る', async () => {
     const id = await createEquipment({
       kind: 'waterHeater', roomId: 'r-101', installedOn: '2014-04', lifeYears: 12,

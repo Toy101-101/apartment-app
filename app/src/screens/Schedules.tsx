@@ -18,8 +18,12 @@ import s from './Schedules.module.css'
  * 一覧は**近い順**。過ぎているものが必ずいちばん上に来る。
  * 「済んだ」を押すと次回の日付が自動で進むので、日付を計算しなくてよい。
  */
+/** type="date" が使えない端末では文字で入るので、形を確かめてから使う */
+const DATE = /^\d{4}-\d{2}-\d{2}$/
+
 export default function Schedules() {
   const [doing, setDoing] = useState<ScheduleRow | null>(null)
+  const [doneOn, setDoneOn] = useState(today())
   const [amount, setAmount] = useState('')
   const [busy, setBusy] = useState(false)
   const [message, setMessage] = useState('')
@@ -29,16 +33,22 @@ export default function Schedules() {
   function start(row: ScheduleRow) {
     setMessage('')
     setDoing(row)
-    setAmount(row.schedule.amount ? String(row.schedule.amount) : '')
+    setDoneOn(today())
+    // 「だいたいの金額」は入れない。直さずに押されると、見込みがそのまま実費として残ってしまう
+    setAmount('')
   }
 
   async function done() {
     if (!doing) return
+    if (!DATE.test(doneOn)) {
+      setMessage('済ませた日を入れてください。')
+      return
+    }
     setBusy(true)
     try {
       const yenAmount = Number(amount.replace(/[^0-9]/g, ''))
       const result = await completeSchedule(doing.schedule.id, {
-        date: today(),
+        date: doneOn,
         amount: yenAmount > 0 ? yenAmount : undefined,
       })
       setMessage(
@@ -103,6 +113,19 @@ export default function Schedules() {
 
             {doing?.schedule.id === schedule.id ? (
               <div className={s.confirm}>
+                {/* 日付を今日で決め打ちにすると、去年払ったものを今年に付けてしまい、
+                    確定申告の年がずれる。あとから記録することがあるので、必ず選べるようにする */}
+                <label className={s.label} htmlFor={`doneOn-${schedule.id}`}>
+                  済ませた日（実際に払った日）
+                </label>
+                <input
+                  id={`doneOn-${schedule.id}`}
+                  className="num"
+                  type="date"
+                  value={doneOn}
+                  onChange={(e) => setDoneOn(e.target.value)}
+                />
+
                 <label className={s.label} htmlFor={`amount-${schedule.id}`}>
                   かかった金額（分からなければ空のままで結構です）
                 </label>
@@ -116,11 +139,21 @@ export default function Schedules() {
                   onChange={(e) => setAmount(e.target.value)}
                 />
                 <p className={s.small}>
+                  {schedule.amount ? (
+                    <>
+                      だいたい <b className="num">{yen(schedule.amount)}</b> と登録してありますが、
+                      ここには<b>実際に払った額</b>を入れてください。{' '}
+                    </>
+                  ) : null}
                   金額を入れると、③修繕・費用にも記録が残ります。
                   空のままなら、次回の日付を進めるだけです。
                 </p>
                 <button className={s.primary} onClick={() => void done()} disabled={busy}>
-                  {busy ? '記録しています…' : `${formatDate(today())}に済んだことにする`}
+                  {busy
+                    ? '記録しています…'
+                    : DATE.test(doneOn)
+                      ? `${formatDate(doneOn)}に済んだことにする`
+                      : '済んだことにする'}
                 </button>
                 <button className={s.secondary} onClick={() => setDoing(null)} disabled={busy}>
                   やめる

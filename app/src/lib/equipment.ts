@@ -196,10 +196,21 @@ export interface ReplaceResult {
  * 古い行は消さずに `replacedOn` を入れて残し、新しい行を作る。
  * 「前のは13年もった」という記録が、次に替えるときの判断材料になる。
  * 金額を入れたときだけ、③修繕・費用に修繕として1件残す。
+ *
+ * `lifeYears` は、入れなければ前のものと同じにする。
+ * 「前のが8年で壊れたから、次は長めに見ておく」と画面で直したときに、
+ * その数字が黙って捨てられないよう、受け取れるようにしてある。
  */
 export async function replaceEquipment(
   id: string,
-  done: { date: string; amount?: number; maker?: string; model?: string; memo?: string },
+  done: {
+    date: string
+    amount?: number
+    lifeYears?: number
+    maker?: string
+    model?: string
+    memo?: string
+  },
 ): Promise<ReplaceResult> {
   const before = await db.equipment.get(id)
   if (!before) throw new Error('その設備が見つかりませんでした。')
@@ -215,7 +226,7 @@ export async function replaceEquipment(
       kind: before.kind,
       roomId: before.roomId,
       installedOn: monthOf(done.date),
-      lifeYears: before.lifeYears,
+      lifeYears: done.lifeYears && done.lifeYears > 0 ? done.lifeYears : before.lifeYears,
       maker: trimmed(done.maker),
       model: trimmed(done.model),
       memo: trimmed(done.memo),

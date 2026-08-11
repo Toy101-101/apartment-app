@@ -27,10 +27,38 @@ beforeEach(async () => {
 })
 
 describe('見本データ', () => {
-  it('10部屋・8人・8契約が入る', async () => {
+  it('10部屋・9人・9契約が入る（うち1件は退去ずみ）', async () => {
     expect(await db.rooms.count()).toBe(10)
-    expect(await db.tenants.count()).toBe(8)
-    expect(await db.leases.count()).toBe(8)
+    expect(await db.tenants.count()).toBe(9)
+    expect(await db.leases.count()).toBe(9)
+    expect((await db.leases.get('l-102'))?.movedOutOn).toBe('2026-06-30')
+  })
+
+  it('①〜⑥のどの画面にも中身がある（空の画面を見せない）', async () => {
+    expect(await db.expenses.count()).toBeGreaterThan(0)
+    expect(await db.schedules.count()).toBeGreaterThan(0)
+    expect(await db.equipment.count()).toBeGreaterThan(0)
+    expect(await db.moveOuts.count()).toBe(1)
+  })
+
+  it('⑤には「過ぎているもの」が必ず1つある（お知らせ枠が空にならない）', async () => {
+    const { buildScheduleRows, needsAttention } = await import('./schedules')
+    const rows = buildScheduleRows(await db.schedules.toArray(), '2026-08-12')
+    expect(rows[0].days).toBeLessThan(0)
+    expect(needsAttention(rows).length).toBeGreaterThan(0)
+  })
+
+  it('⑥には「替え時を過ぎたもの」と「取り替えた履歴」の両方がある', async () => {
+    const { buildEquipmentRows, overdue, replacedHistory } = await import('./equipment')
+    const all = await db.equipment.toArray()
+    const rows = buildEquipmentRows({ equipment: all, rooms: await db.rooms.toArray(), on: '2026-08-12' })
+    expect(overdue(rows).length).toBeGreaterThan(0)
+    expect(replacedHistory(all)).toHaveLength(1)
+  })
+
+  it('退去の手続きは途中まで（残りがあるからホームに出る）', async () => {
+    const { remainingCount } = await import('./moveout')
+    expect(remainingCount(await db.moveOuts.get('mo-102'))).toBeGreaterThan(0)
   })
 
   it('102と203は空室として出る', async () => {
@@ -66,7 +94,9 @@ describe('見本データ', () => {
   it('もう一度入れても、二重にならない', async () => {
     await loadSample()
     expect(await db.rooms.count()).toBe(10)
-    expect(await db.payments.count()).toBe(14)
+    // 1〜6月が9室ぶん、7月が8室ぶん、8月が6室ぶん
+    expect(await db.payments.count()).toBe(9 * 6 + 8 + 6)
+    expect(await db.equipment.count()).toBe(7)
   })
 
   it('全部消すと空になる（設定の meta は残す）', async () => {
@@ -87,7 +117,10 @@ describe('見本だけを消す', () => {
 
   it('見本はきれいに消える', async () => {
     await removeSample()
-    for (const table of [db.rooms, db.tenants, db.leases, db.rentTerms, db.payments, db.notes]) {
+    for (const table of [
+      db.rooms, db.tenants, db.leases, db.rentTerms, db.payments, db.notes,
+      db.expenses, db.schedules, db.equipment, db.moveOuts,
+    ]) {
       expect(await table.count()).toBe(0)
     }
   })

@@ -1,0 +1,43 @@
+/* 見本モードの帯。本物と取りちがえないよう、色も文字も強く出す */
+
+.wrap {
+  max-width: 520px;
+  margin: 0 auto;
+  padding: var(--sp-3) var(--sp-4);
+  padding-top: calc(var(--sp-3) + env(safe-area-inset-top));
+  background: var(--warn-weak);
+  border-bottom: 4px solid var(--warn);
+}
+
+.text {
+  margin: 0;
+  font-size: var(--fs-sub);
+  color: var(--ink);
+  line-height: 1.8;
+}
+
+.strong {
+  display: block;
+  font-size: var(--fs-body);
+  color: var(--warn);
+}
+
+.reset {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  min-height: var(--tap);
+  margin-top: var(--sp-3);
+  border: var(--border) solid var(--warn);
+  border-radius: var(--radius);
+  background: #fff;
+  color: var(--warn);
+  font-size: var(--fs-sub);
+  font-weight: 800;
+}
+
+.reset:disabled {
+  opacity: 0.55;
+  cursor: progress;
+}

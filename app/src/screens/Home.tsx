@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { db } from '../db'
 import { buildContractRows, needsAttention, renewalText } from '../lib/contracts'
+import { IS_DEMO } from '../lib/demo'
 import { formatDate, formatMonth, formatYear, today, yen } from '../lib/date'
 import { buildMonthRows, summarize, thisMonth } from '../lib/rent'
 import {
@@ -251,8 +252,9 @@ export default function Home() {
           設定
         </Link>
 
-        {/* 見本を入れた端末にだけ出る。消せば二度と出ない */}
-        {view?.sample && (
+        {/* 見本を入れた端末にだけ出る。消せば二度と出ない。
+            見本モード（?demo=1）では中身が全部見本なので出さない（帯のボタンでやり直せる） */}
+        {!IS_DEMO && view?.sample && (
           <section className={s.sample}>
             <h2 className={s.sampleTitle}>いま入っているのは見本です</h2>
             <p className={s.sampleNote}>
