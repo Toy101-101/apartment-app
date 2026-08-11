@@ -6,6 +6,9 @@ import { buildContractRows, needsAttention, renewalText } from '../lib/contracts
 import { formatDate, formatMonth, formatYear, today, yen } from '../lib/date'
 import { buildMonthRows, summarize, thisMonth } from '../lib/rent'
 import { hasSampleData, removeSample } from '../lib/sample'
+import {
+  buildScheduleRows, needsAttention as schedulesDue,
+} from '../lib/schedules'
 import { buildVacancyRows, countStates } from '../lib/vacancy'
 import { buildYear } from '../lib/yearly'
 import s from './Home.module.css'
@@ -23,7 +26,7 @@ export default function Home() {
   const year = Number(month.slice(0, 4))
 
   const view = useLiveQuery(async () => {
-    const [rooms, leases, tenants, rentTerms, payments, expenses, sample, lastShare] = await Promise.all([
+    const [rooms, leases, tenants, rentTerms, payments, expenses, schedules, sample, lastShare] = await Promise.all([
       db.rooms.toArray(),
       db.leases.toArray(),
       db.tenants.toArray(),
@@ -31,10 +34,13 @@ export default function Home() {
       // 今年ぶんをまとめて読む。②の集計は buildMonthRows が月で絞るので、これで足りる
       db.payments.where('month').between(`${year}-01`, `${year}-12`, true, true).toArray(),
       db.expenses.toArray(),
+      db.schedules.toArray(),
       hasSampleData(),
       db.meta.get('lastShareAt'),
     ])
     return {
+      due: schedulesDue(buildScheduleRows(schedules)),
+      scheduleCount: schedules.filter((s) => !s.deletedAt).length,
       money: summarize(buildMonthRows({ month, rooms, leases, tenants, rentTerms, payments })),
       renewals: needsAttention(buildContractRows({ leases, rooms, tenants, rentTerms })),
       expenses: expenses.filter((e) => !e.deletedAt).length,
@@ -47,7 +53,8 @@ export default function Home() {
 
   const unpaid = view?.money.unpaid ?? []
   const renewals = view?.renewals ?? []
-  const calm = view && unpaid.length === 0 && renewals.length === 0
+  const due = view?.due ?? []
+  const calm = view && unpaid.length === 0 && renewals.length === 0 && due.length === 0
 
   return (
     <div className={s.shell}>
@@ -84,6 +91,22 @@ export default function Home() {
                     {r.room?.roomNo}号室 {r.tenant?.name}
                     <span className={r.level === 'red' ? s.soonRed : s.soonYellow}>
                       {renewalText(r)}
+                    </span>
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          )}
+
+          {/* 年に1回・4回しか来ないもの。落とすと取り返しがつかないので、家賃と同じ枠に出す */}
+          {due.length > 0 && (
+            <ul className={s.noticeList}>
+              {due.map((r) => (
+                <li key={r.schedule.id}>
+                  <Link to="/schedules">
+                    {r.schedule.title}
+                    <span className={r.level === 'red' ? s.soonRed : s.soonYellow}>
+                      {r.text}
                     </span>
                   </Link>
                 </li>
@@ -138,6 +161,19 @@ export default function Home() {
             </span>
           </Link>
         </div>
+
+        <Link className={s.keep} to="/schedules">
+          <span className={s.keepName}>⑤ 年間の予定（保険・税金・点検）</span>
+          <span className={s.keepSub}>
+            {view
+              ? view.scheduleCount === 0
+                ? 'まだ登録がありません'
+                : due.length > 0
+                  ? `${view.scheduleCount}件のうち、${due.length}件が近づいています`
+                  : `${view.scheduleCount}件を見ています`
+              : '…'}
+          </span>
+        </Link>
 
         <Link className={s.keep} to="/yearly">
           <span className={s.keepName}>年ごとのまとめ</span>

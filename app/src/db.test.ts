@@ -49,7 +49,48 @@ describe('表を足したときの引き継ぎ', () => {
     expect(await db.rooms.count()).toBe(1)
     expect(db.tables.map((t) => t.name).sort()).toStrictEqual([
       'expenses', 'leases', 'meta', 'notes', 'paymentLog',
-      'payments', 'photos', 'rentTerms', 'rooms', 'tenants',
+      'payments', 'photos', 'rentTerms', 'rooms', 'schedules', 'tenants',
     ])
+  })
+
+  it('版2（本体10表）で保存したものが、版3に上がっても残る', async () => {
+    // フェーズ1〜6のアプリと同じ形でデータベースを作り、契約を1件入れる
+    const old = new Dexie('apartment')
+    old.version(1).stores({ meta: '&key' })
+    old.version(2).stores({
+      meta: '&key',
+      rooms: 'id, roomNo, sortOrder',
+      tenants: 'id, kana',
+      leases: 'id, roomId, tenantId, endDate',
+      rentTerms: 'id, leaseId, [leaseId+fromMonth]',
+      payments: 'id, leaseId, month, [leaseId+month]',
+      paymentLog: 'id, paymentId, at',
+      expenses: 'id, kind, date, roomId',
+      photos: 'id, createdAt',
+      notes: 'id, targetType, date, [targetType+targetId]',
+    })
+    await old.open()
+    await old.table('leases').put({
+      id: 'l-1', createdAt: '2026-08-01T00:00:00.000Z', updatedAt: '2026-08-01T00:00:00.000Z',
+      roomId: 'r-1', tenantId: 't-1',
+      startDate: '2026-04-01', endDate: '2028-03-31', deposit: 110000, keyMoney: 55000,
+    })
+    old.close()
+
+    // いまのアプリを開く（ここで版2 → 版3 の引き上げが起きる）
+    const { db, SCHEMA_VERSION, newId, now } = await import('./db')
+    await db.open()
+
+    expect(db.verno).toBe(SCHEMA_VERSION)
+    expect((await db.leases.get('l-1'))?.deposit).toBe(110000)
+
+    // 足した表がそのまま使えること
+    const at = now()
+    await db.schedules.put({
+      id: newId(), createdAt: at, updatedAt: at,
+      title: '火災保険の更新', kind: 'insurance',
+      nextDate: '2027-04-01', everyMonths: 12, noticeDays: 60,
+    })
+    expect(await db.schedules.count()).toBe(1)
   })
 })

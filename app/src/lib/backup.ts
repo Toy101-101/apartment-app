@@ -10,6 +10,7 @@ import {
   type PaymentLogRow,
   type RentTerm,
   type Room,
+  type Schedule,
   type Tenant,
 } from '../db'
 import { today } from './date'
@@ -43,6 +44,7 @@ export interface BackupData {
   paymentLog: PaymentLogRow[]
   expenses: Expense[]
   notes: Note[]
+  schedules: Schedule[]
 }
 
 /** 控えファイルの中身そのもの */
@@ -70,6 +72,7 @@ function emptyTables(): BackupData {
     paymentLog: [],
     expenses: [],
     notes: [],
+    schedules: [],
   }
 }
 
@@ -80,7 +83,7 @@ export const BACKUP_TABLES = Object.keys(emptyTables()) as (keyof BackupData)[]
 
 /** いま端末に入っているものを全部読み出す */
 export async function readAll(): Promise<BackupData> {
-  const [meta, rooms, tenants, leases, rentTerms, payments, paymentLog, expenses, notes] =
+  const [meta, rooms, tenants, leases, rentTerms, payments, paymentLog, expenses, notes, schedules] =
     await Promise.all([
       db.meta.toArray(),
       db.rooms.toArray(),
@@ -91,8 +94,9 @@ export async function readAll(): Promise<BackupData> {
       db.paymentLog.toArray(),
       db.expenses.toArray(),
       db.notes.toArray(),
+      db.schedules.toArray(),
     ])
-  return { meta, rooms, tenants, leases, rentTerms, payments, paymentLog, expenses, notes }
+  return { meta, rooms, tenants, leases, rentTerms, payments, paymentLog, expenses, notes, schedules }
 }
 
 function countOf(data: BackupData): Record<string, number> {
@@ -137,6 +141,8 @@ const MIGRATIONS: Record<number, (data: RawData) => RawData> = {
   // 1 → 2: 本体の表（部屋・人・契約…）が増えた。
   // 版1の控えには meta しか入っていないので、残りは空の表として足す。
   1: (data) => ({ ...emptyTables(), meta: data.meta }),
+  // 2 → 3: 年間の予定（保険・税金・点検）が増えた。版2の控えには入っていないので空で足す。
+  2: (data) => ({ ...data, schedules: [] }),
 }
 
 function asArray(value: unknown): unknown[] {
@@ -222,6 +228,7 @@ export async function restoreBackup(backup: Backup): Promise<Record<string, numb
     db.paymentLog,
     db.expenses,
     db.notes,
+    db.schedules,
   ]
 
   // 途中で失敗したら全部なかったことにする（半分だけ入った状態を作らない）
@@ -236,6 +243,7 @@ export async function restoreBackup(backup: Backup): Promise<Record<string, numb
     await db.paymentLog.bulkPut(data.paymentLog)
     await db.expenses.bulkPut(data.expenses)
     await db.notes.bulkPut(data.notes)
+    await db.schedules.bulkPut(data.schedules)
   })
 
   return countOf(data)

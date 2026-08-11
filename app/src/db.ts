@@ -131,6 +131,29 @@ export interface Photo extends BaseRow {
   caption?: string
 }
 
+/** 年に何回か来る決まりごとの種類 */
+export type ScheduleKind = 'insurance' | 'tax' | 'inspection' | 'other'
+
+/**
+ * 年に1〜4回だけ来る決まりごと（保険の更新・税金の納期・点検）。
+ *
+ * 毎月来る家賃は忘れないが、年に1回のものほど忘れる。
+ * ここは「**次にいつ来るか**」だけを持つ。
+ * 済ませた実績は `expenses` に記録するので、同じことを二重に持たない。
+ */
+export interface Schedule extends BaseRow {
+  title: string // '火災保険の更新'
+  kind: ScheduleKind
+  nextDate: string // 'YYYY-MM-DD' 次にすることの日
+  /** 何か月ごとに来るか。12=年1回、6=年2回、3=年4回、0=1回きり */
+  everyMonths: number
+  /** 何日前から知らせるか */
+  noticeDays: number
+  amount?: number // だいたいの金額（分かっていれば）
+  vendor?: string // 保険会社・業者・納付先
+  memo?: string
+}
+
 /** メモを結びつける先 */
 export type NoteTarget = 'room' | 'tenant' | 'lease' | 'payment' | 'expense'
 
@@ -155,6 +178,7 @@ export class AppDB extends Dexie {
   expenses!: Table<Expense, string>
   photos!: Table<Photo, string>
   notes!: Table<Note, string>
+  schedules!: Table<Schedule, string>
 
   constructor() {
     super('apartment')
@@ -175,6 +199,11 @@ export class AppDB extends Dexie {
       photos: 'id, createdAt',
       notes: 'id, targetType, date, [targetType+targetId]',
     })
+    // version(3): 年間の予定を足す。
+    // Dexie は書かなかった表をそのまま引き継ぐので、増えた表だけを書けばよい
+    this.version(3).stores({
+      schedules: 'id, nextDate, kind',
+    })
   }
 }
 
@@ -184,7 +213,7 @@ export const db = new AppDB()
  * データの形の版。控えJSONにも必ず書き込む。
  * Dexie の version() と同じ数字にそろえておく（ずれると原因を追いにくくなる）。
  */
-export const SCHEMA_VERSION = 2
+export const SCHEMA_VERSION = 3
 
 /** 新しい行の id */
 export function newId(): string {

@@ -1,0 +1,103 @@
+/* 年間の予定の登録と書きかえ */
+
+/* --- よくある予定 --- */
+.templates {
+  border: var(--border) dashed var(--brand);
+  border-radius: var(--radius);
+  background: var(--brand-weak);
+  padding: var(--sp-4);
+  margin-bottom: var(--sp-5);
+}
+.templatesTitle {
+  margin: 0 0 var(--sp-2);
+  font-size: var(--fs-lead);
+  font-weight: 800;
+  color: var(--brand);
+}
+.templatesNote {
+  margin: 0 0 var(--sp-3);
+  font-size: var(--fs-sub);
+  color: var(--ink-2);
+  line-height: 1.7;
+}
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-2);
+}
+.chips button {
+  min-height: var(--tap);
+  padding: var(--sp-2) var(--sp-4);
+  border: var(--border) solid var(--brand);
+  border-radius: var(--radius);
+  background: #fff;
+  color: var(--brand);
+  font-size: var(--fs-sub);
+  font-weight: 800;
+}
+
+/* --- 押して選ぶ欄（種類・間隔・知らせる日数） --- */
+.choices {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-2);
+}
+.choices button {
+  flex: 1 1 auto;
+  min-width: 5.5em;
+  min-height: var(--tap);
+  padding: var(--sp-2) var(--sp-3);
+  border: var(--border) solid var(--line-soft);
+  border-radius: var(--radius);
+  background: #fff;
+  font-size: var(--fs-sub);
+  font-weight: 800;
+}
+/* 選ばれているものが一目で分かること。色だけに頼らず、枠も濃くする */
+.choices button[aria-pressed='true'] {
+  border-color: var(--brand-dark);
+  background: var(--brand);
+  color: #fff;
+}
+
+.error {
+  margin: 0 0 var(--sp-4);
+  border: var(--border) solid var(--danger);
+  border-radius: var(--radius);
+  background: var(--danger-weak);
+  padding: var(--sp-3) var(--sp-4);
+  font-size: var(--fs-lead);
+  font-weight: 800;
+  color: var(--danger);
+  line-height: 1.7;
+}
+
+.primary,
+.remove {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  min-height: var(--tap);
+  margin-top: var(--sp-3);
+  padding: var(--sp-2) var(--sp-3);
+  border-radius: var(--radius);
+  font-size: var(--fs-body);
+  font-weight: 800;
+}
+.primary {
+  border: var(--border) solid var(--brand-dark);
+  background: var(--brand);
+  color: #fff;
+}
+.remove {
+  margin-top: var(--sp-5);
+  border: var(--border) solid var(--danger);
+  background: #fff;
+  color: var(--danger);
+}
+.primary:disabled,
+.remove:disabled {
+  opacity: 0.55;
+  cursor: progress;
+}

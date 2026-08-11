@@ -1,0 +1,161 @@
+/* ⑤ 年間の予定 */
+
+.add {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  min-height: var(--tap);
+  margin-bottom: var(--sp-4);
+  border: var(--border) solid var(--brand-dark);
+  border-radius: var(--radius);
+  background: var(--brand);
+  color: #fff;
+  font-size: var(--fs-body);
+  font-weight: 800;
+  text-decoration: none;
+}
+
+.note {
+  margin: 0 0 var(--sp-4);
+  font-size: var(--fs-lead);
+  color: var(--ink-2);
+  line-height: 1.9;
+}
+
+.result {
+  margin: 0 0 var(--sp-4);
+  border: var(--border) solid var(--ok);
+  border-radius: var(--radius);
+  background: var(--ok-weak);
+  padding: var(--sp-3) var(--sp-4);
+  font-size: var(--fs-lead);
+  font-weight: 800;
+  color: var(--ok);
+  line-height: 1.8;
+}
+
+/* --- 1件ぶん --- */
+.card {
+  border: var(--border) solid var(--line);
+  border-radius: var(--radius);
+  padding: var(--sp-4);
+  margin-bottom: var(--sp-4);
+}
+/* 過ぎている・1週間以内。落とすと取り返しがつかないので、いちばん強く出す */
+.red {
+  border-color: var(--danger);
+  background: var(--danger-weak);
+}
+.yellow {
+  border-color: var(--warn);
+  background: var(--warn-weak);
+}
+
+.head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--sp-3);
+}
+.title {
+  margin: 0;
+  font-size: var(--fs-title);
+  font-weight: 800;
+}
+.kind {
+  flex: 0 0 auto;
+  border: 2px solid var(--line-soft);
+  border-radius: 999px;
+  padding: 2px var(--sp-3);
+  font-size: var(--fs-sub);
+  font-weight: 800;
+  background: #fff;
+}
+
+.when {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: var(--sp-3);
+  margin: var(--sp-2) 0 0;
+  font-size: var(--fs-body);
+  font-weight: 800;
+}
+.days {
+  font-size: var(--fs-sub);
+  font-weight: 700;
+  color: var(--ink-2);
+}
+.daysWarn {
+  font-size: var(--fs-body);
+  font-weight: 800;
+  color: var(--danger);
+}
+.yellow .daysWarn { color: var(--warn); }
+
+.meta {
+  margin: var(--sp-2) 0 0;
+  font-size: var(--fs-sub);
+  color: var(--ink-2);
+}
+.memo {
+  margin: var(--sp-2) 0 0;
+  font-size: var(--fs-sub);
+  color: var(--ink-2);
+  line-height: 1.8;
+  white-space: pre-wrap;
+}
+
+/* --- 操作 --- */
+.actions,
+.confirm {
+  display: grid;
+  gap: var(--sp-3);
+  margin-top: var(--sp-4);
+}
+.confirm {
+  border-top: 2px solid var(--line-soft);
+  padding-top: var(--sp-4);
+}
+
+.primary,
+.secondary {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  min-height: var(--tap);
+  padding: var(--sp-2) var(--sp-3);
+  border-radius: var(--radius);
+  font-size: var(--fs-body);
+  font-weight: 800;
+  text-decoration: none;
+}
+.primary {
+  border: var(--border) solid var(--brand-dark);
+  background: var(--brand);
+  color: #fff;
+}
+.secondary {
+  border: var(--border) solid var(--brand);
+  background: #fff;
+  color: var(--brand);
+}
+.primary:disabled,
+.secondary:disabled {
+  opacity: 0.55;
+  cursor: progress;
+}
+
+.label {
+  display: block;
+  font-size: var(--fs-sub);
+  font-weight: 800;
+}
+.small {
+  margin: 0;
+  font-size: var(--fs-sub);
+  color: var(--ink-2);
+  line-height: 1.7;
+}

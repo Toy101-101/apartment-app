@@ -34,6 +34,22 @@ export function addDays(iso: string, n: number): string {
   return toISO(d)
 }
 
+/**
+ * その日の nか月後（前なら負の数）。
+ *
+ * 月末を必ずその月の月末に丸める。
+ * 8月31日の6か月後を素直に計算すると「2月31日」になり、
+ * JavaScript はこれを3月3日に繰り上げてしまう。
+ * 固定資産税のように月末が納期のものが、毎回3日ずつずれていく。
+ */
+export function addMonths(iso: string, n: number): string {
+  const [y, m, d] = iso.split('-').map(Number)
+  const target = new Date(y, m - 1 + n, 1)
+  const lastDay = new Date(target.getFullYear(), target.getMonth() + 1, 0).getDate()
+  target.setDate(Math.min(d, lastDay))
+  return toISO(target)
+}
+
 /** その日まであと何日か（過去なら負の数） */
 export function daysUntil(iso: string, from: string = today()): number {
   const diff = parseDate(iso).getTime() - parseDate(from).getTime()

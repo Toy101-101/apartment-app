@@ -12,6 +12,8 @@ import Expenses from './screens/Expenses'
 import Home from './screens/Home'
 import Payments from './screens/Payments'
 import Print from './screens/Print'
+import ScheduleForm from './screens/ScheduleForm'
+import Schedules from './screens/Schedules'
 import Vacancy from './screens/Vacancy'
 import Yearly from './screens/Yearly'
 
@@ -33,6 +35,10 @@ createRoot(document.getElementById('root')!).render(
         <Route path="/expenses/:id" element={<ExpenseDetail />} />
         <Route path="/expenses/:id/edit" element={<ExpenseForm />} />
         <Route path="/vacancy" element={<Vacancy />} />
+        {/* 「新しい予定」は :id より先に置く（先に書いたほうが優先されるため） */}
+        <Route path="/schedules" element={<Schedules />} />
+        <Route path="/schedules/new" element={<ScheduleForm />} />
+        <Route path="/schedules/:id/edit" element={<ScheduleForm />} />
         <Route path="/yearly" element={<Yearly />} />
         <Route path="/backup" element={<Backup />} />
         <Route path="/print" element={<Print />} />
