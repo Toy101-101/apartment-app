@@ -89,6 +89,11 @@ export function buildContractRows({
 export function renewalText(
   row: Pick<ContractRow, 'living' | 'future' | 'days' | 'lease'>,
 ): string {
+  // 退去が決まっていれば、更新の話はもう関係ない
+  if (row.lease.movedOutOn) {
+    const day = formatDate(row.lease.movedOutOn)
+    return row.living ? `${day}に退去されます` : `${day}に退去されました`
+  }
   if (row.future) return `${formatDate(row.lease.startDate)}から始まります`
   if (!row.living) return '契約は終わっています'
   if (row.days < 0) return `更新の日を ${-row.days}日 過ぎています`
@@ -98,10 +103,11 @@ export function renewalText(
 
 /**
  * 更新の知らせを出すべき契約（60日以内）。
- * まだ始まっていない契約は知らせない（更新はもう済んでいるため）。
+ * まだ始まっていない契約と、退去が決まっている契約は知らせない
+ * （どちらも、これから更新することは無いため）。
  */
 export function needsAttention(rows: ContractRow[]): ContractRow[] {
-  return rows.filter((r) => r.living && !r.future && r.level !== 'none')
+  return rows.filter((r) => r.living && !r.future && !r.lease.movedOutOn && r.level !== 'none')
 }
 
 // --- データベースの読み書き -----------------------------------------------

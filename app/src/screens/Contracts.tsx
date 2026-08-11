@@ -63,7 +63,8 @@ export default function Contracts() {
 }
 
 function ContractCard({ row }: { row: ContractRow }) {
-  const tone = !row.living ? s.ended : row.future ? s.future : s[row.level]
+  // 退去が決まっていれば、更新の近さで色を変えても意味がない
+  const tone = !row.living || row.lease.movedOutOn ? s.ended : row.future ? s.future : s[row.level]
   return (
     <Link className={`${s.card} ${tone}`} to={`/contracts/${row.lease.id}`}>
       <div className={s.head}>

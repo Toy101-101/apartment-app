@@ -308,6 +308,18 @@ describe('一覧の並びと知らせ', () => {
     expect(renewalText(rows.find((r) => !r.future)!)).toBe('あと50日で契約更新')
     expect(renewalText(rows.find((r) => r.future)!)).toBe('令和8年10月1日（木）から始まります')
   })
+
+  it('退去が決まったら、更新の話はしない', async () => {
+    const id = await createContract({ ...INPUT, endDate: '2026-09-30' })
+    await endLease(id, '2026-08-31')
+
+    const soon = (await rowsNow('2026-08-11'))[0]
+    expect(renewalText(soon)).toBe('令和8年8月31日（月）に退去されます')
+    expect(needsAttention(await rowsNow('2026-08-11'))).toStrictEqual([])
+
+    const past = (await rowsNow('2026-09-15'))[0]
+    expect(renewalText(past)).toBe('令和8年8月31日（月）に退去されました')
+  })
 })
 
 describe('いきさつメモ', () => {
