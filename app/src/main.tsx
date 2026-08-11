@@ -16,6 +16,7 @@ import Payments from './screens/Payments'
 import Print from './screens/Print'
 import ScheduleForm from './screens/ScheduleForm'
 import Schedules from './screens/Schedules'
+import Settings from './screens/Settings'
 import Vacancy from './screens/Vacancy'
 import Yearly from './screens/Yearly'
 
@@ -46,6 +47,7 @@ createRoot(document.getElementById('root')!).render(
         <Route path="/equipment/:id/edit" element={<EquipmentForm />} />
         <Route path="/equipment/:id/replace" element={<EquipmentForm />} />
         <Route path="/yearly" element={<Yearly />} />
+        <Route path="/settings" element={<Settings />} />
         <Route path="/backup" element={<Backup />} />
         <Route path="/print" element={<Print />} />
         {/* 知らないURLはホームに落とす（控えのリンクなどを踏んでも迷子にならない） */}

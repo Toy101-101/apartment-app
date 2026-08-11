@@ -1,0 +1,69 @@
+/* 設定 */
+
+.card {
+  border: var(--border) solid var(--line);
+  border-radius: var(--radius);
+  padding: var(--sp-4);
+  margin-bottom: var(--sp-4);
+}
+.title {
+  margin: 0 0 var(--sp-2);
+  font-size: var(--fs-title);
+  font-weight: 800;
+}
+.note {
+  margin: 0 0 var(--sp-3);
+  font-size: var(--fs-sub);
+  color: var(--ink-2);
+  line-height: 1.9;
+}
+.note:last-child { margin-bottom: 0; }
+.small {
+  margin: var(--sp-3) 0 0;
+  font-size: var(--fs-sub);
+  color: var(--ink-2);
+  line-height: 1.8;
+}
+
+/* --- 押して選ぶ ---
+   選んだ結果が何件になるかを、ボタンの中に出す。
+   決めたあとで「思っていたのと違う」となるのを防ぐ */
+.choices {
+  display: grid;
+  gap: var(--sp-3);
+}
+.choices button {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  gap: 2px;
+  width: 100%;
+  min-height: var(--tap);
+  padding: var(--sp-2) var(--sp-4);
+  border: var(--border) solid var(--line-soft);
+  border-radius: var(--radius);
+  background: #fff;
+  text-align: left;
+}
+/* 選ばれているものが一目で分かること。色だけに頼らず、枠も濃くする */
+.choices button[aria-pressed='true'] {
+  border-color: var(--brand-dark);
+  background: var(--brand);
+  color: #fff;
+}
+.choices button:disabled {
+  opacity: 0.55;
+  cursor: progress;
+}
+.choiceMain {
+  font-size: var(--fs-body);
+  font-weight: 800;
+}
+.choiceSub {
+  font-size: var(--fs-sub);
+  color: var(--ink-2);
+}
+.choices button[aria-pressed='true'] .choiceSub {
+  color: #dbe7f3;
+}

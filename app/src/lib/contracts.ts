@@ -41,6 +41,8 @@ export interface ContractListInput {
   rentTerms: RentTerm[]
   /** 'YYYY-MM-DD'。省略すると今日 */
   from?: string
+  /** 更新を何日前から知らせるか（設定。省略すると60日前） */
+  noticeDays?: number
 }
 
 /**
@@ -48,7 +50,7 @@ export interface ContractListInput {
  * 続いている契約を「更新が近い順」に並べ、終わった契約はそのあとに新しい順で置く。
  */
 export function buildContractRows({
-  leases, rooms, tenants, rentTerms, from = today(),
+  leases, rooms, tenants, rentTerms, from = today(), noticeDays,
 }: ContractListInput): ContractRow[] {
   const roomById = new Map(rooms.map((r) => [r.id, r]))
   const tenantById = new Map(tenants.map((t) => [t.id, t]))
@@ -65,7 +67,7 @@ export function buildContractRows({
         month < startMonth ? startMonth : month,
       )
       const end = lease.movedOutOn ?? lease.endDate
-      const { level, days } = renewalLevel(lease.endDate, from)
+      const { level, days } = renewalLevel(lease.endDate, from, noticeDays)
       return {
         lease,
         room: roomById.get(lease.roomId),
@@ -102,7 +104,7 @@ export function renewalText(
 }
 
 /**
- * 更新の知らせを出すべき契約（60日以内）。
+ * 更新の知らせを出すべき契約（設定した日数まで近づいたもの。既定は60日前から）。
  * まだ始まっていない契約と、退去が決まっている契約は知らせない
  * （どちらも、これから更新することは無いため）。
  */

@@ -3,6 +3,7 @@ import { useLiveQuery } from 'dexie-react-hooks'
 import { Screen } from '../components/Screen'
 import { db } from '../db'
 import { buildContractRows, renewalText, type ContractRow } from '../lib/contracts'
+import { readRenewalNoticeDays } from '../lib/settings'
 import { formatDate, yen } from '../lib/date'
 import s from './Contracts.module.css'
 
@@ -15,13 +16,15 @@ import s from './Contracts.module.css'
 
 export default function Contracts() {
   const rows = useLiveQuery(async () => {
-    const [leases, rooms, tenants, rentTerms] = await Promise.all([
+    const [leases, rooms, tenants, rentTerms, noticeDays] = await Promise.all([
       db.leases.toArray(),
       db.rooms.toArray(),
       db.tenants.toArray(),
       db.rentTerms.toArray(),
+      // 一覧の色分けも、ホームのお知らせと同じ設定にそろえる
+      readRenewalNoticeDays(),
     ])
-    return buildContractRows({ leases, rooms, tenants, rentTerms })
+    return buildContractRows({ leases, rooms, tenants, rentTerms, noticeDays })
   }, [])
 
   const living = rows?.filter((r) => r.living) ?? []

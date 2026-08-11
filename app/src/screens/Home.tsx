@@ -9,6 +9,7 @@ import {
   buildEquipmentRows, needsAttention as equipmentDue, overdue as equipmentOverdue,
 } from '../lib/equipment'
 import { hasSampleData, removeSample } from '../lib/sample'
+import { readRenewalNoticeDays } from '../lib/settings'
 import {
   buildScheduleRows, needsAttention as schedulesDue,
 } from '../lib/schedules'
@@ -44,6 +45,7 @@ export default function Home() {
       hasSampleData(),
       db.meta.get('lastShareAt'),
     ])
+    const noticeDays = await readRenewalNoticeDays()
     const equipmentRows = buildEquipmentRows({ equipment, rooms })
     return {
       due: schedulesDue(buildScheduleRows(schedules)),
@@ -52,7 +54,7 @@ export default function Home() {
       equipmentSoon: equipmentDue(equipmentRows).length,
       equipmentOver: equipmentOverdue(equipmentRows).length,
       money: summarize(buildMonthRows({ month, rooms, leases, tenants, rentTerms, payments })),
-      renewals: needsAttention(buildContractRows({ leases, rooms, tenants, rentTerms })),
+      renewals: needsAttention(buildContractRows({ leases, rooms, tenants, rentTerms, noticeDays })),
       expenses: expenses.filter((e) => !e.deletedAt).length,
       vacant: countStates(buildVacancyRows({ rooms, leases, tenants })).vacant,
       yearNet: buildYear({ year, rooms, leases, rentTerms, payments, expenses }).net,
@@ -221,6 +223,11 @@ export default function Home() {
               ? `最後に送ったのは ${formatDate(view.lastShareAt)}`
               : 'まだ一度も送っていません'}
           </span>
+        </Link>
+
+        {/* 設定はめったに触らない。帯にはせず、いちばん下に静かに置く */}
+        <Link className={s.settings} to="/settings">
+          設定
         </Link>
 
         {/* 見本を入れた端末にだけ出る。消せば二度と出ない */}

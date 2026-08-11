@@ -192,6 +192,23 @@
   color: var(--ink-2);
 }
 
+/* --- 設定 ---
+   めったに触らないので、帯にはせず静かに置く。
+   ただし押せる高さ（64px）は他と同じに保つ */
+.settings {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: var(--tap);
+  margin-top: var(--sp-4);
+  border: 2px solid var(--line-soft);
+  border-radius: var(--radius);
+  color: var(--ink-2);
+  font-size: var(--fs-sub);
+  font-weight: 800;
+  text-decoration: none;
+}
+
 /* --- 見本が入っている端末にだけ出る欄（消せば二度と出ない） --- */
 .sample {
   margin-top: var(--sp-6);

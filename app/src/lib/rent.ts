@@ -57,13 +57,25 @@ export function isActiveOn(lease: Lease, day: string): boolean {
   return lease.startDate <= day && day <= (lease.movedOutOn ?? lease.endDate)
 }
 
-/** 契約更新の近さ。30日以内は赤、60日以内は黄 */
+/**
+ * 契約更新の近さ。
+ *
+ * 「いつから知らせるか」は設定で変えられる（既定は60日前）。
+ * そのうち**残り1か月を切ったら赤**にする。ここは急ぐ側なので固定でよい。
+ * ただし知らせ始める日数のほうが短いときは、そちらに合わせる
+ * （「30日前から」と決めたのに35日前から赤くなるのでは、設定した意味がない）。
+ */
 export type RenewalLevel = 'red' | 'yellow' | 'none'
 
-export function renewalLevel(endDate: string, from?: string): { level: RenewalLevel; days: number } {
+/** 残りこれを切ったら赤（設定の日数のほうが短ければ、そちらを使う） */
+export const URGENT_DAYS = 30
+
+export function renewalLevel(
+  endDate: string, from?: string, noticeDays = 60,
+): { level: RenewalLevel; days: number } {
   const days = daysUntil(endDate, from)
-  if (days <= 30) return { level: 'red', days }
-  if (days <= 60) return { level: 'yellow', days }
+  if (days <= Math.min(URGENT_DAYS, noticeDays)) return { level: 'red', days }
+  if (days <= noticeDays) return { level: 'yellow', days }
   return { level: 'none', days }
 }
 
