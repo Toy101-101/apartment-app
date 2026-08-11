@@ -1,15 +1,16 @@
 import { db, type Lease, type Note, type Payment, type RentTerm, type Room, type Tenant } from '../db'
 
 /**
- * 見本データ（作っている間だけの仕掛け）
+ * 見本データ（架空の10部屋）
  *
- * 入居者を登録する画面はフェーズ3で作る。それまで入金の画面を確かめる相手がいないので、
- * 架空の10部屋をまとめて入れられるようにしておく。
+ * 入居者を登録する画面ができたので、**入れるボタンは画面から外した**。
+ * 本物の記録が入っている端末で誤って押されたら、全部消えてしまうため。
+ * いまも残してあるのは次の2つのため。
  *
- * - 名前・電話番号はすべて**架空**（mockup.html と同じ顔ぶれ）。実在の入居者は入れない
- * - 入れるときは本体の表をいったん空にする。祖父の端末で誤って押しても
- *   「見本に入れかわる」だけで、中途半端に混ざることはない
- * - 入居者の登録画面ができたら、この仕掛けごと消す
+ * 1. 試験（`sample.test.ts`）で、現実に近い10部屋ぶんの計算を毎回確かめる
+ * 2. すでに見本を入れてしまった端末から、**見本だけを選んで消す**（`removeSample`）
+ *
+ * 名前・電話番号はすべて**架空**（mockup.html と同じ顔ぶれ）。実在の入居者は入れない。
  */
 
 const T = '2026-08-01T00:00:00.000Z'
@@ -142,7 +143,7 @@ export async function loadSample(): Promise<void> {
   )
 }
 
-/** 本体の表を空にする（meta は残す） */
+/** 本体の表を空にする（meta は残す）。試験でだけ使う */
 export async function clearSample(): Promise<void> {
   await db.transaction(
     'rw',
@@ -152,6 +153,38 @@ export async function clearSample(): Promise<void> {
         db.rooms.clear(), db.tenants.clear(), db.leases.clear(), db.rentTerms.clear(),
         db.payments.clear(), db.paymentLog.clear(), db.expenses.clear(), db.notes.clear(),
       ])
+    },
+  )
+}
+
+/** 見本データが入っているか（入っている端末にだけ、消す案内を出すため） */
+export async function hasSampleData(): Promise<boolean> {
+  return (await db.rooms.get(rooms[0].id)) !== undefined
+}
+
+/**
+ * 見本データ**だけ**を消す。
+ *
+ * 本物の記録の id は `crypto.randomUUID()`（16進数）なので、
+ * `r-101` のような見本の id とぶつかることは無い。だから取りちがえて消す心配がない。
+ */
+export async function removeSample(): Promise<void> {
+  const payments = buildPayments()
+  await db.transaction(
+    'rw',
+    [db.rooms, db.tenants, db.leases, db.rentTerms, db.payments, db.paymentLog, db.notes],
+    async () => {
+      // 見本の入金に対してつけた操作の履歴も、一緒に片づける
+      const paymentIds = new Set(payments.map((p) => p.id))
+      const logs = await db.paymentLog.toArray()
+      await db.paymentLog.bulkDelete(logs.filter((l) => paymentIds.has(l.paymentId)).map((l) => l.id))
+
+      await db.rooms.bulkDelete(rooms.map((r) => r.id))
+      await db.tenants.bulkDelete(tenants.map((t) => t.id))
+      await db.leases.bulkDelete(leases.map((l) => l.id))
+      await db.rentTerms.bulkDelete(rentTerms.map((t) => t.id))
+      await db.payments.bulkDelete(payments.map((p) => p.id))
+      await db.notes.bulkDelete(notes.map((n) => n.id))
     },
   )
 }

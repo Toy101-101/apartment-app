@@ -27,6 +27,13 @@ export function today(now: Date = new Date()): string {
   return toISO(now)
 }
 
+/** その日の n日後（前なら負の数）。'2026-08-25' → n=1 → '2026-08-26' */
+export function addDays(iso: string, n: number): string {
+  const d = parseDate(iso)
+  d.setDate(d.getDate() + n)
+  return toISO(d)
+}
+
 /** その日まであと何日か（過去なら負の数） */
 export function daysUntil(iso: string, from: string = today()): number {
   const diff = parseDate(iso).getTime() - parseDate(from).getTime()

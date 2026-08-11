@@ -93,9 +93,41 @@ button:active {
 button:focus-visible,
 a:focus-visible,
 input:focus-visible,
-textarea:focus-visible {
+textarea:focus-visible,
+select:focus-visible {
   outline: 4px solid #f2a900;
   outline-offset: 2px;
+}
+
+/* --- 入力欄の共通の作法 -------------------------------------------------
+   欄が小さいと押しまちがえるうえ、iOSは文字が16pxより小さい入力欄に
+   近づくと画面を勝手に拡大する。本文と同じ大きさを保つ。
+   ---------------------------------------------------------------------- */
+input,
+textarea,
+select {
+  display: block;
+  width: 100%;
+  min-height: var(--tap);
+  padding: var(--sp-2) var(--sp-3);
+  border: var(--border) solid var(--line);
+  border-radius: var(--radius);
+  background: #fff;
+  color: var(--ink);
+  font-family: inherit;
+  font-size: var(--fs-body);
+  line-height: 1.6;
+}
+textarea {
+  /* 音声入力（キーボードのマイク）で長く話しても収まるよう、はじめから広く取る */
+  min-height: 168px;
+  resize: vertical;
+  line-height: 1.8;
+}
+input:disabled,
+textarea:disabled {
+  background: #f1f3f5;
+  color: var(--ink-2);
 }
 @media (prefers-reduced-motion: reduce) {
   button:active {

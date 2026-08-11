@@ -1,0 +1,92 @@
+/* ① 入居者・契約 一覧 */
+
+.add {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: var(--tap);
+  margin-bottom: var(--sp-5);
+  border: var(--border) solid var(--brand-dark);
+  border-radius: var(--radius);
+  background: var(--brand);
+  color: #fff;
+  font-size: var(--fs-body);
+  font-weight: 800;
+  text-decoration: none;
+}
+
+.note {
+  margin: var(--sp-4) 0;
+  font-size: var(--fs-lead);
+  color: var(--ink-2);
+  line-height: 1.8;
+}
+
+.groupTitle {
+  margin: var(--sp-5) 0 var(--sp-3);
+  font-size: var(--fs-title);
+  font-weight: 800;
+}
+.groupNote {
+  margin: 0 0 var(--sp-3);
+  font-size: var(--fs-sub);
+  color: var(--ink-2);
+  line-height: 1.7;
+}
+
+/* --- 1件ぶんの札 --- */
+.card {
+  display: block;
+  border: var(--border) solid var(--line);
+  border-left-width: 12px;
+  border-radius: var(--radius);
+  padding: var(--sp-3) var(--sp-4);
+  margin-bottom: var(--sp-3);
+  color: var(--ink);
+  text-decoration: none;
+}
+.card:active { background: #f1f3f5; }
+
+/* 更新までの近さで、左の帯の色を変える */
+.red { border-left-color: var(--danger); }
+.yellow { border-left-color: var(--warn); }
+.none { border-left-color: var(--ok); }
+.ended {
+  border-color: var(--line-soft);
+  border-left-color: var(--line-soft);
+  background: #f6f7f8;
+  color: var(--ink-2);
+}
+
+.head {
+  display: flex;
+  align-items: baseline;
+  gap: var(--sp-3);
+}
+.roomNo {
+  font-size: var(--fs-big);
+  font-weight: 800;
+}
+.name {
+  font-size: var(--fs-body);
+  font-weight: 700;
+}
+.rent {
+  margin-top: var(--sp-1);
+  font-size: var(--fs-lead);
+}
+.renewal {
+  margin-top: var(--sp-2);
+  font-size: var(--fs-lead);
+  font-weight: 800;
+}
+.red .renewal { color: var(--danger); }
+.yellow .renewal { color: var(--warn); }
+.none .renewal { color: var(--ok); }
+.ended .renewal { color: var(--ink-2); }
+
+.period {
+  margin-top: var(--sp-1);
+  font-size: var(--fs-sub);
+  color: var(--ink-2);
+}

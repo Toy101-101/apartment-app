@@ -1,0 +1,66 @@
+.shell {
+  max-width: 520px;
+  margin: 0 auto;
+  min-height: 100dvh;
+  background: var(--surface);
+  /* 下に貼りつく帯に、いちばん下の内容が隠れないよう空けておく */
+  padding-bottom: 96px;
+}
+
+.bar {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  min-height: 72px;
+  padding: var(--sp-2) var(--sp-3);
+  padding-top: calc(var(--sp-2) + env(safe-area-inset-top));
+  background: var(--brand);
+  color: #fff;
+  border-bottom: 4px solid var(--brand-dark);
+}
+.back,
+.backSpacer {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 56px;
+  min-height: var(--tap);
+  border-radius: var(--radius);
+  color: #fff;
+  font-size: 2rem;
+  font-weight: 800;
+  line-height: 1;
+  text-decoration: none;
+}
+.back:active { background: var(--brand-dark); }
+.barTitle {
+  flex: 1;
+  text-align: center;
+  font-size: var(--fs-title);
+  font-weight: 800;
+  /* 「② 家 賃の入金」のような不自然な折り返しを避ける */
+  word-break: auto-phrase;
+}
+
+.body {
+  padding: var(--sp-4);
+}
+
+/* いちばん下の「ホームにもどる」（片手持ちの親指が届く場所） */
+.home {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: var(--tap);
+  margin-top: var(--sp-6);
+  border: var(--border) solid var(--brand);
+  border-radius: var(--radius);
+  background: var(--brand-weak);
+  color: var(--brand);
+  font-size: var(--fs-body);
+  font-weight: 800;
+  text-decoration: none;
+}

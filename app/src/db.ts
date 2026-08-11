@@ -191,6 +191,20 @@ export function newId(): string {
   return crypto.randomUUID()
 }
 
+/**
+ * 中身の無い欄を、鍵ごと落とす。
+ *
+ * `{ phone: undefined }` のまま保存すると、控えJSONにしたときだけ鍵が消えるため、
+ * 「書き出す → 読み込む」で中身がずれてしまう。入れないなら最初から持たせない。
+ */
+export function compact<T extends object>(row: T): T {
+  const obj = row as Record<string, unknown>
+  for (const key of Object.keys(obj)) {
+    if (obj[key] === undefined) delete obj[key]
+  }
+  return row
+}
+
 let lastNow = ''
 
 /**

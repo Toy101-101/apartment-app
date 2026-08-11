@@ -83,6 +83,37 @@
   text-decoration: none;
 }
 
+/* 更新が近い契約（押すとその契約に飛ぶ） */
+.noticeList {
+  margin: var(--sp-3) 0 0;
+  padding: 0;
+  list-style: none;
+}
+.noticeList a {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: var(--sp-1);
+  min-height: var(--tap);
+  padding: var(--sp-2) var(--sp-3);
+  margin-top: var(--sp-2);
+  border: var(--border) solid var(--line);
+  border-radius: var(--radius);
+  background: #fff;
+  color: var(--ink);
+  font-size: var(--fs-lead);
+  font-weight: 800;
+  text-decoration: none;
+}
+.soonRed {
+  font-size: var(--fs-sub);
+  color: var(--danger);
+}
+.soonYellow {
+  font-size: var(--fs-sub);
+  color: var(--warn);
+}
+
 /* --- 4つの入口（2列） --- */
 .grid {
   display: grid;
@@ -131,41 +162,39 @@
   cursor: not-allowed;
 }
 
-/* --- 作っている間だけの欄（入居者の登録画面ができたら丸ごと消す） --- */
-.dev {
+/* --- 見本が入っている端末にだけ出る欄（消せば二度と出ない） --- */
+.sample {
   margin-top: var(--sp-6);
-  border: var(--border) dashed var(--line-soft);
+  border: var(--border) dashed var(--warn);
   border-radius: var(--radius);
+  background: var(--warn-weak);
   padding: var(--sp-4);
 }
-.devTitle {
+.sampleTitle {
   margin: 0 0 var(--sp-2);
   font-size: var(--fs-lead);
   font-weight: 800;
-  color: var(--ink-2);
+  color: var(--warn);
 }
-.devNote {
+.sampleNote {
   margin: 0 0 var(--sp-3);
   font-size: var(--fs-sub);
   color: var(--ink-2);
-  line-height: 1.7;
+  line-height: 1.8;
 }
-.devRow {
-  display: flex;
-  gap: var(--sp-3);
-}
-.devRow button {
-  flex: 1;
+.sample button {
+  display: block;
+  width: 100%;
   min-height: var(--tap);
-  padding: var(--sp-2);
-  border: var(--border) solid var(--line-soft);
+  padding: var(--sp-2) var(--sp-3);
+  border: var(--border) solid var(--warn);
   border-radius: var(--radius);
   background: #fff;
-  color: var(--ink-2);
-  font-size: var(--fs-sub);
+  color: var(--warn);
+  font-size: var(--fs-body);
   font-weight: 800;
 }
-.devRow button:disabled {
+.sample button:disabled {
   opacity: 0.5;
   cursor: progress;
 }

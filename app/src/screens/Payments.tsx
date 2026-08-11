@@ -1,6 +1,6 @@
-import { useEffect, useState } from 'react'
-import { Link } from 'react-router-dom'
+﻿import { useEffect, useState } from 'react'
 import { useLiveQuery } from 'dexie-react-hooks'
+import { Screen } from '../components/Screen'
 import { db } from '../db'
 import { formatMonth, formatShort, shiftMonth, yen } from '../lib/date'
 import { togglePaid, undoToggle, type ToggleResult } from '../lib/payments'
@@ -97,124 +97,113 @@ export default function Payments() {
   }
 
   return (
-    <div className={s.shell}>
-      <header className={s.bar}>
-        <Link className={s.back} to="/" aria-label="ホームにもどる">
-          ‹
-        </Link>
-        <div className={s.barTitle}>② 家賃の入金</div>
-        <span className={s.backSpacer} aria-hidden="true" />
-      </header>
+    <Screen
+      title="② 家賃の入金"
+      fixed={
+        // 取り消しの帯。5秒たつと静かに消える
+        pending && (
+          <div className={s.undoBar} role="status" aria-live="polite">
+            <span>{pending.message}</span>
+            <button onClick={handleUndo}>取り消す</button>
+          </div>
+        )
+      }
+    >
+      <div className={s.monthBar}>
+        <button
+          onClick={() => setMonth(shiftMonth(month, -1))}
+          disabled={month <= oldest}
+          aria-label="前の月"
+        >
+          ◀
+        </button>
+        <div className={s.monthLabel}>{formatMonth(month)}</div>
+        <button
+          onClick={() => setMonth(shiftMonth(month, 1))}
+          disabled={month >= current}
+          aria-label="次の月"
+        >
+          ▶
+        </button>
+      </div>
 
-      <main className={s.body}>
-        <div className={s.monthBar}>
-          <button
-            onClick={() => setMonth(shiftMonth(month, -1))}
-            disabled={month <= oldest}
-            aria-label="前の月"
-          >
-            ◀
-          </button>
-          <div className={s.monthLabel}>{formatMonth(month)}</div>
-          <button
-            onClick={() => setMonth(shiftMonth(month, 1))}
-            disabled={month >= current}
-            aria-label="次の月"
-          >
-            ▶
-          </button>
-        </div>
+      <p className={s.lead}>
+        ボタンを1回押すだけで切りかえられます。
+        押しまちがえても、もう一度押せば元に戻ります。
+      </p>
 
-        <p className={s.lead}>
-          ボタンを1回押すだけで切りかえられます。
-          押しまちがえても、もう一度押せば元に戻ります。
+      {rows === undefined && <p className={s.loading}>読み込んでいます…</p>}
+
+      {rows?.length === 0 && (
+        <p className={s.empty}>
+          まだ部屋が登録されていません。
+          先に「① 入居者・契約」から契約を登録してください。
         </p>
+      )}
 
-        {rows === undefined && <p className={s.loading}>読み込んでいます…</p>}
-
-        {rows?.length === 0 && (
-          <p className={s.empty}>
-            まだ部屋が登録されていません。
-            ホームの下にある「見本データを入れる」を押すと、動きを試せます。
-          </p>
-        )}
-
-        {rows?.map((row) => (
-          <div key={row.room.id} className={`${s.row} ${row.lease ? '' : s.vacantRow}`}>
-            <div className={s.who}>
-              <div>
-                <span className={`${s.roomNo} num`}>{row.room.roomNo}</span>
-                <span className={s.name}>{row.tenant?.name ?? '空室のため なし'}</span>
-              </div>
-              {row.lease && (
-                <div className={`${s.rent} num`}>
-                  {yen(row.due)}
-                  {row.paid && row.payment?.paidOn && (
-                    <span className={s.paidOn}>／{formatShort(row.payment.paidOn)}に入金</span>
-                  )}
-                </div>
-              )}
+      {rows?.map((row) => (
+        <div key={row.room.id} className={`${s.row} ${row.lease ? '' : s.vacantRow}`}>
+          <div className={s.who}>
+            <div>
+              <span className={`${s.roomNo} num`}>{row.room.roomNo}</span>
+              <span className={s.name}>{row.tenant?.name ?? '空室のため なし'}</span>
             </div>
-
-            {row.lease ? (
-              <button
-                className={`${s.toggle} ${row.paid ? s.yes : s.no}`}
-                onClick={() => handleToggle(row)}
-                aria-pressed={row.paid}
-              >
-                {row.paid ? '✓ 済' : '✗ 未'}
-              </button>
-            ) : (
-              <div className={s.vacantMark}>—</div>
+            {row.lease && (
+              <div className={`${s.rent} num`}>
+                {yen(row.due)}
+                {row.paid && row.payment?.paidOn && (
+                  <span className={s.paidOn}>／{formatShort(row.payment.paidOn)}に入金</span>
+                )}
+              </div>
             )}
           </div>
-        ))}
 
-        {summary && summary.occupied > 0 && (
-          <section className={s.summary}>
-            <div>
-              入っているお金：<b className="num">{yen(summary.received)}</b>
-              <span className={s.expected}>／{yen(summary.expected)}</span>
-            </div>
-            {summary.unpaid.length === 0 ? (
-              <p className={s.allPaid}>◎ この月はすべて入金されています</p>
-            ) : (
-              <p className={s.someUnpaid}>
-                まだの部屋：{summary.unpaid.length}件（
-                {summary.unpaid.map((r) => `${r.room.roomNo}号室`).join('・')}）
-              </p>
-            )}
-          </section>
-        )}
-
-        {history && history.length > 0 && (
-          <section className={s.history}>
-            <h2 className={s.historyTitle}>最近の操作</h2>
-            <ul>
-              {history.map((h) => (
-                <li key={h.id}>
-                  <span className="num">{h.at}</span>
-                  <span>
-                    {h.roomNo}号室を{h.what}
-                  </span>
-                </li>
-              ))}
-            </ul>
-          </section>
-        )}
-
-        <Link className={s.home} to="/">
-          ホームにもどる
-        </Link>
-      </main>
-
-      {/* 取り消しの帯。5秒たつと静かに消える */}
-      {pending && (
-        <div className={s.undoBar} role="status" aria-live="polite">
-          <span>{pending.message}</span>
-          <button onClick={handleUndo}>取り消す</button>
+          {row.lease ? (
+            <button
+              className={`${s.toggle} ${row.paid ? s.yes : s.no}`}
+              onClick={() => handleToggle(row)}
+              aria-pressed={row.paid}
+            >
+              {row.paid ? '✓ 済' : '✗ 未'}
+            </button>
+          ) : (
+            <div className={s.vacantMark}>—</div>
+          )}
         </div>
+      ))}
+
+      {summary && summary.occupied > 0 && (
+        <section className={s.summary}>
+          <div>
+            入っているお金：<b className="num">{yen(summary.received)}</b>
+            <span className={s.expected}>／{yen(summary.expected)}</span>
+          </div>
+          {summary.unpaid.length === 0 ? (
+            <p className={s.allPaid}>◎ この月はすべて入金されています</p>
+          ) : (
+            <p className={s.someUnpaid}>
+              まだの部屋：{summary.unpaid.length}件（
+              {summary.unpaid.map((r) => `${r.room.roomNo}号室`).join('・')}）
+            </p>
+          )}
+        </section>
       )}
-    </div>
+
+      {history && history.length > 0 && (
+        <section className={s.history}>
+          <h2 className={s.historyTitle}>最近の操作</h2>
+          <ul>
+            {history.map((h) => (
+              <li key={h.id}>
+                <span className="num">{h.at}</span>
+                <span>
+                  {h.roomNo}号室を{h.what}
+                </span>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
+    </Screen>
   )
 }

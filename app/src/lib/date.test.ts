@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest'
 import {
-  parseDate, toISO, daysUntil, formatDate, formatShort,
+  parseDate, toISO, addDays, daysUntil, formatDate, formatShort,
   monthKey, formatMonth, shiftMonth, yen,
 } from './date'
 
@@ -15,6 +15,24 @@ describe('日付の解釈', () => {
 
   it('往復しても変わらない', () => {
     expect(toISO(parseDate('2019-05-01'))).toBe('2019-05-01')
+  })
+})
+
+describe('日をずらす', () => {
+  it('翌日・前日が出る（契約の更新は前の契約の翌日から始める）', () => {
+    expect(addDays('2026-08-25', 1)).toBe('2026-08-26')
+    expect(addDays('2026-08-25', -1)).toBe('2026-08-24')
+  })
+
+  it('月末・年末をまたいでも合う', () => {
+    expect(addDays('2026-08-31', 1)).toBe('2026-09-01')
+    expect(addDays('2026-12-31', 1)).toBe('2027-01-01')
+    expect(addDays('2026-03-01', -1)).toBe('2026-02-28')
+  })
+
+  it('うるう年をまたいでも合う', () => {
+    expect(addDays('2028-02-28', 1)).toBe('2028-02-29')
+    expect(addDays('2028-03-01', -1)).toBe('2028-02-29')
   })
 })
 

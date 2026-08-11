@@ -1,0 +1,28 @@
+.field {
+  margin-bottom: var(--sp-4);
+}
+.label {
+  display: block;
+  margin-bottom: var(--sp-2);
+  font-size: var(--fs-lead);
+  font-weight: 800;
+}
+.required {
+  margin-left: var(--sp-2);
+  font-size: var(--fs-sub);
+  font-weight: 700;
+  color: var(--danger);
+}
+.hint {
+  margin: 0 0 var(--sp-2);
+  font-size: var(--fs-sub);
+  color: var(--ink-2);
+  line-height: 1.7;
+}
+.error {
+  margin: var(--sp-2) 0 0;
+  font-size: var(--fs-sub);
+  font-weight: 800;
+  color: var(--danger);
+  line-height: 1.7;
+}

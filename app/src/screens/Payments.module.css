@@ -1,53 +1,5 @@
-/* ② 家賃の入金（A案の構造・C案の寸法） */
-
-.shell {
-  max-width: 520px;
-  margin: 0 auto;
-  min-height: 100dvh;
-  background: var(--surface);
-  /* 取り消しの帯にいちばん下の内容が隠れないよう、あらかじめ空けておく */
-  padding-bottom: 96px;
-}
-
-.bar {
-  position: sticky;
-  top: 0;
-  z-index: 10;
-  display: flex;
-  align-items: center;
-  gap: var(--sp-2);
-  min-height: 72px;
-  padding: var(--sp-2) var(--sp-3);
-  padding-top: calc(var(--sp-2) + env(safe-area-inset-top));
-  background: var(--brand);
-  color: #fff;
-  border-bottom: 4px solid var(--brand-dark);
-}
-.back,
-.backSpacer {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  min-width: 56px;
-  min-height: var(--tap);
-  border-radius: var(--radius);
-  color: #fff;
-  font-size: 2rem;
-  font-weight: 800;
-  line-height: 1;
-  text-decoration: none;
-}
-.back:active { background: var(--brand-dark); }
-.barTitle {
-  flex: 1;
-  text-align: center;
-  font-size: var(--fs-title);
-  font-weight: 800;
-}
-
-.body {
-  padding: var(--sp-4);
-}
+/* ② 家賃の入金（A案の構造・C案の寸法）
+   画面の外枠（上のバー・ホームにもどる）は components/Screen にある */
 
 /* --- 月送り --- */
 .monthBar {
@@ -210,22 +162,6 @@
   border-bottom: 1px solid var(--line-soft);
 }
 .history li:last-child { border-bottom: none; }
-
-/* --- ホームにもどる（片手持ちの親指が届く下端に置く） --- */
-.home {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  min-height: var(--tap);
-  margin-top: var(--sp-5);
-  border: var(--border) solid var(--brand);
-  border-radius: var(--radius);
-  background: var(--brand-weak);
-  color: var(--brand);
-  font-size: var(--fs-body);
-  font-weight: 800;
-  text-decoration: none;
-}
 
 /* --- 取り消しの帯（5秒） --- */
 .undoBar {

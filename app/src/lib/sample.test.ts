@@ -3,7 +3,8 @@ import 'fake-indexeddb/auto'
 import { describe, it, expect, beforeEach } from 'vitest'
 import { db } from '../db'
 import { buildMonthRows, summarize } from './rent'
-import { clearSample, loadSample } from './sample'
+import { createContract } from './contracts'
+import { clearSample, hasSampleData, loadSample, removeSample } from './sample'
 
 /**
  * 見本データの試験
@@ -74,5 +75,44 @@ describe('見本データ', () => {
     expect(await db.rooms.count()).toBe(0)
     expect(await db.payments.count()).toBe(0)
     expect(await db.meta.count()).toBe(1)
+  })
+})
+
+describe('見本だけを消す', () => {
+  it('入っているかどうかが分かる', async () => {
+    expect(await hasSampleData()).toBe(true)
+    await removeSample()
+    expect(await hasSampleData()).toBe(false)
+  })
+
+  it('見本はきれいに消える', async () => {
+    await removeSample()
+    for (const table of [db.rooms, db.tenants, db.leases, db.rentTerms, db.payments, db.notes]) {
+      expect(await table.count()).toBe(0)
+    }
+  })
+
+  it('本物の記録は消さない（ここが肝心）', async () => {
+    const real = await createContract({
+      roomNo: '301', name: '本物 太郎', kana: 'ほんもの たろう',
+      startDate: '2026-08-01', endDate: '2028-07-31',
+      deposit: 100000, keyMoney: 50000, rent: 60000, mgmtFee: 3000,
+    })
+    await removeSample()
+
+    expect(await db.leases.get(real)).toBeDefined()
+    expect(await db.rooms.count()).toBe(1)
+    expect(await db.tenants.count()).toBe(1)
+    expect(await db.rentTerms.count()).toBe(1)
+    expect((await db.tenants.toArray())[0].name).toBe('本物 太郎')
+  })
+
+  it('見本の入金につけた操作の履歴も片づく', async () => {
+    const { togglePaid } = await import('./payments')
+    await togglePaid({ leaseId: 'l-101', month: '2026-08', due: 58000, roomNo: '101' })
+    expect(await db.paymentLog.count()).toBe(1)
+
+    await removeSample()
+    expect(await db.paymentLog.count()).toBe(0)
   })
 })

@@ -1,0 +1,222 @@
+/* 契約の詳細 */
+
+.note {
+  margin: var(--sp-3) 0;
+  font-size: var(--fs-lead);
+  color: var(--ink-2);
+  line-height: 1.8;
+}
+
+/* --- 見出し（誰の、どの契約か） --- */
+.head {
+  border: var(--border) solid var(--line);
+  border-radius: var(--radius);
+  padding: var(--sp-4);
+}
+.endedHead {
+  border-color: var(--line-soft);
+  background: #f6f7f8;
+}
+.name {
+  font-size: var(--fs-big);
+  font-weight: 800;
+}
+.kana {
+  font-size: var(--fs-sub);
+  color: var(--ink-2);
+}
+.renewal {
+  margin-top: var(--sp-2);
+  font-size: var(--fs-lead);
+  font-weight: 800;
+}
+
+/* --- 連絡のしかた（契約書に無い、頭の中の情報。だから目立たせる） --- */
+.contact {
+  margin-top: var(--sp-4);
+  border: var(--border) solid var(--teal);
+  border-radius: var(--radius);
+  background: var(--teal-weak);
+  padding: var(--sp-3) var(--sp-4);
+}
+.contactTitle {
+  margin: 0 0 var(--sp-1);
+  font-size: var(--fs-sub);
+  font-weight: 800;
+  color: var(--teal);
+}
+.contact p {
+  margin: 0;
+  font-size: var(--fs-body);
+  line-height: 1.8;
+  white-space: pre-wrap;
+}
+
+.groupTitle {
+  margin: var(--sp-5) 0 var(--sp-3);
+  padding-bottom: var(--sp-2);
+  border-bottom: var(--border) solid var(--line);
+  font-size: var(--fs-title);
+  font-weight: 800;
+}
+.subTitle {
+  margin: var(--sp-4) 0 var(--sp-2);
+  font-size: var(--fs-lead);
+  font-weight: 800;
+}
+
+/* --- 項目の並び --- */
+.list {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: var(--sp-2) var(--sp-4);
+  margin: 0;
+  font-size: var(--fs-lead);
+}
+.list dt {
+  color: var(--ink-2);
+  font-size: var(--fs-sub);
+  padding: var(--sp-1) 0;
+}
+.list dd {
+  margin: 0;
+  padding: var(--sp-1) 0;
+  font-weight: 700;
+  text-align: right;
+}
+.list a {
+  color: var(--brand);
+  font-weight: 800;
+}
+
+/* --- 家賃 --- */
+.bigRent {
+  margin: 0;
+  font-size: var(--fs-sub);
+  color: var(--ink-2);
+}
+.bigRent b {
+  display: block;
+  font-size: var(--fs-huge);
+  font-weight: 800;
+  color: var(--ink);
+}
+.terms {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.terms li {
+  border-left: 6px solid var(--line-soft);
+  padding: var(--sp-2) 0 var(--sp-2) var(--sp-3);
+  margin-bottom: var(--sp-2);
+  font-size: var(--fs-lead);
+}
+.terms li > div {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--sp-3);
+}
+.terms b { font-weight: 800; }
+.reason {
+  margin: var(--sp-1) 0 0;
+  font-size: var(--fs-sub);
+  color: var(--ink-2);
+  line-height: 1.7;
+}
+
+/* --- いきさつメモ（この画面の主役） --- */
+.notes {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.notes li {
+  border: var(--border) solid var(--line-soft);
+  border-radius: var(--radius);
+  padding: var(--sp-3) var(--sp-4);
+  margin-bottom: var(--sp-3);
+}
+.noteHead {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--sp-3);
+  font-size: var(--fs-sub);
+  color: var(--ink-2);
+  font-weight: 700;
+}
+.noteBody {
+  margin: var(--sp-2) 0 0;
+  font-size: var(--fs-body);
+  line-height: 1.9;
+  white-space: pre-wrap;
+}
+.noteDelete {
+  min-height: var(--tap);
+  margin-top: var(--sp-2);
+  padding: 0 var(--sp-3);
+  border: 2px solid var(--line-soft);
+  border-radius: var(--radius);
+  background: #fff;
+  color: var(--ink-2);
+  font-size: var(--fs-sub);
+  font-weight: 700;
+}
+
+/* --- 手を入れる --- */
+.actions {
+  display: grid;
+  gap: var(--sp-3);
+}
+.actions button,
+.actions a {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: var(--tap);
+  padding: var(--sp-2) var(--sp-3);
+  border: var(--border) solid var(--brand);
+  border-radius: var(--radius);
+  background: var(--brand-weak);
+  color: var(--brand);
+  font-size: var(--fs-body);
+  font-weight: 800;
+  text-decoration: none;
+}
+
+/* --- 開いて使う小さな欄 --- */
+.panel {
+  margin-top: var(--sp-4);
+  border: var(--border) solid var(--brand);
+  border-radius: var(--radius);
+  padding: var(--sp-4);
+}
+.panelTitle {
+  margin: 0 0 var(--sp-2);
+  font-size: var(--fs-title);
+  font-weight: 800;
+}
+.panelNote {
+  margin: 0 0 var(--sp-4);
+  font-size: var(--fs-sub);
+  color: var(--ink-2);
+  line-height: 1.8;
+}
+.panelSave {
+  display: block;
+  width: 100%;
+  min-height: var(--tap);
+  padding: var(--sp-2) var(--sp-3);
+  border: var(--border) solid var(--brand-dark);
+  border-radius: var(--radius);
+  background: var(--brand);
+  color: #fff;
+  font-size: var(--fs-body);
+  font-weight: 800;
+}
+.panelSave:disabled {
+  border-color: var(--line-soft);
+  background: #f1f3f5;
+  color: var(--ink-2);
+  cursor: not-allowed;
+}
