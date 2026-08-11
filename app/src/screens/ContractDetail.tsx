@@ -177,6 +177,15 @@ export default function ContractDetail() {
         )}
       </div>
 
+      {/* 退去にしたら、立会いと敷金の精算へ進めるようにする。
+          ここを押さないと手順が始まらないので、いちばん目立つ形で置く */}
+      {lease.movedOutOn && (
+        <Link className={s.moveOut} to={`/contracts/${lease.id}/moveout`}>
+          退去の手続きをひらく
+          <span>立会いのやること・敷金の精算</span>
+        </Link>
+      )}
+
       {panel === 'note' && (
         <NotePanel busy={busy} onSave={(body, author) =>
           run(() => addNote({ targetType: 'lease', targetId: lease.id, body, author }))} />

@@ -31,6 +31,7 @@ const TABLE_LABEL: Record<string, string> = {
   notes: 'いきさつメモ',
   schedules: '年間の予定',
   equipment: '設備の年式',
+  moveOuts: '退去の手続き',
   meta: '設定',
 }
 

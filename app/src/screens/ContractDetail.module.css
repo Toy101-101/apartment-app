@@ -229,3 +229,30 @@
   color: var(--ink-2);
   cursor: not-allowed;
 }
+
+/* --- 退去の手続きへの入口 ---
+   退去にしたあと、ここを押さないと立会いの手順が始まらない。
+   「手を入れる」の並びに埋もれないよう、下に大きく置く */
+.moveOut {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--sp-1);
+  width: 100%;
+  min-height: var(--tap);
+  margin-top: var(--sp-4);
+  padding: var(--sp-3) var(--sp-4);
+  border: var(--border) solid var(--brand-dark);
+  border-radius: var(--radius);
+  background: var(--brand);
+  color: #fff;
+  font-size: var(--fs-body);
+  font-weight: 800;
+  text-decoration: none;
+}
+.moveOut span {
+  font-size: var(--fs-sub);
+  font-weight: 700;
+  color: #dbe7f3;
+}

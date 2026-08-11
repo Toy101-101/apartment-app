@@ -181,6 +181,37 @@ export interface Equipment extends BaseRow {
   replacedOn?: string
 }
 
+/** 敷金からの差し引き1件 */
+export interface Deduction {
+  id: string
+  title: string // 'クロスの張り替え（居室）'
+  amount: number
+  /**
+   * なぜ引いたか。**この欄がこの表の主役**。
+   * 敷金で揉めるのは、金額そのものではなく「なぜ引かれたのか分からない」ときだから。
+   */
+  reason: string
+}
+
+/**
+ * 退去の立会いと敷金の精算。1つの契約につき1つ。
+ *
+ * やることの抜けを防ぐことと、敷金からいくら・なぜ引いたかを残すことの2つが目的。
+ *
+ * 差し引き（`deductions`）は別の表にせず、この行の中に配列で持つ。
+ * 1回の退去で数件しかなく、この記録の外で使い道が無いため、
+ * 表を増やすより中に入れておくほうが読みやすく、控えにもそのまま乗る。
+ */
+export interface MoveOut extends BaseRow {
+  leaseId: string
+  /** 済ませたことの印。`lib/moveout.ts` の STEPS の key が入る */
+  done: string[]
+  deductions: Deduction[]
+  /** 敷金を返した日 */
+  refundedOn?: string
+  memo?: string
+}
+
 /** メモを結びつける先 */
 export type NoteTarget = 'room' | 'tenant' | 'lease' | 'payment' | 'expense'
 
@@ -207,6 +238,7 @@ export class AppDB extends Dexie {
   notes!: Table<Note, string>
   schedules!: Table<Schedule, string>
   equipment!: Table<Equipment, string>
+  moveOuts!: Table<MoveOut, string>
 
   constructor() {
     super('apartment')
@@ -236,6 +268,10 @@ export class AppDB extends Dexie {
     this.version(4).stores({
       equipment: 'id, roomId, kind, installedOn',
     })
+    // version(5): 退去の立会いと敷金の精算を足す。1契約に1つなので leaseId で引く
+    this.version(5).stores({
+      moveOuts: 'id, &leaseId',
+    })
   }
 }
 
@@ -245,7 +281,7 @@ export const db = new AppDB()
  * データの形の版。控えJSONにも必ず書き込む。
  * Dexie の version() と同じ数字にそろえておく（ずれると原因を追いにくくなる）。
  */
-export const SCHEMA_VERSION = 4
+export const SCHEMA_VERSION = 5
 
 /** 新しい行の id */
 export function newId(): string {

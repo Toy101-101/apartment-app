@@ -1,0 +1,259 @@
+/* 退去の立会いと敷金の精算 */
+
+.note {
+  margin: 0 0 var(--sp-4);
+  font-size: var(--fs-lead);
+  color: var(--ink-2);
+  line-height: 1.9;
+}
+
+.head {
+  border: var(--border) solid var(--line);
+  border-radius: var(--radius);
+  padding: var(--sp-4);
+  margin-bottom: var(--sp-5);
+}
+.who {
+  font-size: var(--fs-big);
+  font-weight: 800;
+}
+.when {
+  margin-top: var(--sp-1);
+  font-size: var(--fs-sub);
+  color: var(--ink-2);
+}
+.warn {
+  margin: var(--sp-3) 0 0;
+  border: 2px solid var(--warn);
+  border-radius: var(--radius);
+  background: var(--warn-weak);
+  padding: var(--sp-2) var(--sp-3);
+  font-size: var(--fs-sub);
+  color: var(--warn);
+  line-height: 1.7;
+}
+
+.groupTitle {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--sp-2);
+  margin: var(--sp-5) 0 var(--sp-3);
+  font-size: var(--fs-title);
+  font-weight: 800;
+}
+.count {
+  font-size: var(--fs-sub);
+  font-weight: 800;
+  color: var(--ink-2);
+}
+
+/* --- やること ---
+   押すだけで済／未が変わる。年に1〜2回しかしないので、手順を覚えていられない */
+.steps {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: var(--sp-2);
+}
+.step,
+.stepDone {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--sp-3);
+  width: 100%;
+  min-height: var(--tap);
+  padding: var(--sp-3) var(--sp-4);
+  border: var(--border) solid var(--line-soft);
+  border-radius: var(--radius);
+  background: #fff;
+  text-align: left;
+}
+/* 済んだものは、色だけでなく✓でも分かるようにする */
+.stepDone {
+  border-color: var(--ok);
+  background: var(--ok-weak);
+}
+.mark {
+  flex: 0 0 1.4em;
+  font-size: var(--fs-title);
+  font-weight: 800;
+  color: var(--ok);
+  line-height: 1.3;
+}
+.stepBody {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.stepLabel {
+  font-size: var(--fs-body);
+  font-weight: 800;
+}
+.stepDone .stepLabel {
+  color: var(--ok);
+}
+.stepHint {
+  font-size: var(--fs-sub);
+  color: var(--ink-2);
+  line-height: 1.7;
+}
+
+/* --- 敷金 --- */
+.money {
+  margin: 0 0 var(--sp-3);
+  padding: 0;
+  list-style: none;
+  font-size: var(--fs-body);
+}
+.money li {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--sp-3);
+  padding: var(--sp-2) 0;
+  border-bottom: 1px solid var(--line-soft);
+}
+.money b { font-weight: 800; }
+
+.refund,
+.shortfall {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-1);
+  margin: 0 0 var(--sp-4);
+  border: var(--border) solid var(--brand);
+  border-radius: var(--radius);
+  background: var(--brand-weak);
+  padding: var(--sp-3) var(--sp-4);
+  font-size: var(--fs-body);
+  font-weight: 800;
+  color: var(--brand);
+}
+.refund b,
+.shortfall b {
+  font-size: var(--fs-huge);
+  line-height: 1.3;
+}
+.shortfall {
+  border-color: var(--danger);
+  background: var(--danger-weak);
+  color: var(--danger);
+}
+.refundNote {
+  font-size: var(--fs-sub);
+  font-weight: 700;
+}
+
+/* --- 差し引きの一覧 ---
+   金額より理由を大きく置く。揉めるのは理由が分からないとき */
+.deductions {
+  margin: 0 0 var(--sp-4);
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: var(--sp-3);
+}
+.deductions li {
+  border: 2px solid var(--line-soft);
+  border-radius: var(--radius);
+  padding: var(--sp-3) var(--sp-4);
+}
+.dHead {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--sp-3);
+}
+.dTitle {
+  font-size: var(--fs-sub);
+  font-weight: 800;
+}
+.dAmount {
+  flex: 0 0 auto;
+  font-size: var(--fs-body);
+  font-weight: 800;
+}
+.dReason {
+  margin: var(--sp-2) 0 0;
+  font-size: var(--fs-body);
+  line-height: 1.8;
+  white-space: pre-wrap;
+}
+.dDelete {
+  min-height: var(--tap);
+  margin-top: var(--sp-2);
+  padding: 0 var(--sp-3);
+  border: 2px solid var(--line-soft);
+  border-radius: var(--radius);
+  background: #fff;
+  font-size: var(--fs-sub);
+  color: var(--ink-2);
+}
+
+/* --- 足す・保存 --- */
+.add,
+.save,
+.panelSave,
+.panelCancel {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  min-height: var(--tap);
+  padding: var(--sp-2) var(--sp-3);
+  border-radius: var(--radius);
+  font-size: var(--fs-body);
+  font-weight: 800;
+}
+.add {
+  border: var(--border) solid var(--brand);
+  background: var(--brand-weak);
+  color: var(--brand);
+  margin-bottom: var(--sp-3);
+}
+.save,
+.panelSave {
+  border: var(--border) solid var(--brand-dark);
+  background: var(--brand);
+  color: #fff;
+  margin-top: var(--sp-3);
+}
+.panelCancel {
+  border: var(--border) solid var(--line-soft);
+  background: #fff;
+  color: var(--ink-2);
+  margin-top: var(--sp-2);
+}
+.add:disabled,
+.save:disabled,
+.panelSave:disabled,
+.panelCancel:disabled {
+  opacity: 0.55;
+}
+
+.panel {
+  border: var(--border) solid var(--brand);
+  border-radius: var(--radius);
+  background: var(--brand-weak);
+  padding: var(--sp-4);
+  margin-bottom: var(--sp-3);
+}
+.panelTitle {
+  margin: 0 0 var(--sp-3);
+  font-size: var(--fs-lead);
+  font-weight: 800;
+  color: var(--brand);
+}
+
+/* 二重に数えないための注意。目立たせすぎず、必ず読める位置に置く */
+.caution {
+  margin: 0 0 var(--sp-4);
+  border: 2px solid var(--line-soft);
+  border-radius: var(--radius);
+  padding: var(--sp-3) var(--sp-4);
+  font-size: var(--fs-sub);
+  color: var(--ink-2);
+  line-height: 1.9;
+}

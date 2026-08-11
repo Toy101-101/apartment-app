@@ -8,6 +8,7 @@ import { buildMonthRows, summarize, thisMonth } from '../lib/rent'
 import {
   buildEquipmentRows, needsAttention as equipmentDue, overdue as equipmentOverdue,
 } from '../lib/equipment'
+import { pendingMoveOuts } from '../lib/moveout'
 import { hasSampleData, removeSample } from '../lib/sample'
 import { readRenewalNoticeDays } from '../lib/settings'
 import {
@@ -45,10 +46,14 @@ export default function Home() {
       hasSampleData(),
       db.meta.get('lastShareAt'),
     ])
-    const noticeDays = await readRenewalNoticeDays()
+    const [noticeDays, moveOuts] = await Promise.all([
+      readRenewalNoticeDays(),
+      db.moveOuts.toArray(),
+    ])
     const equipmentRows = buildEquipmentRows({ equipment, rooms })
     return {
       due: schedulesDue(buildScheduleRows(schedules)),
+      moveOuts: pendingMoveOuts({ leases, rooms, tenants, moveOuts }),
       scheduleCount: schedules.filter((s) => !s.deletedAt).length,
       equipmentCount: equipmentRows.length,
       equipmentSoon: equipmentDue(equipmentRows).length,
@@ -66,7 +71,9 @@ export default function Home() {
   const unpaid = view?.money.unpaid ?? []
   const renewals = view?.renewals ?? []
   const due = view?.due ?? []
-  const calm = view && unpaid.length === 0 && renewals.length === 0 && due.length === 0
+  const moving = view?.moveOuts ?? []
+  const calm = view
+    && unpaid.length === 0 && renewals.length === 0 && due.length === 0 && moving.length === 0
 
   return (
     <div className={s.shell}>
@@ -104,6 +111,20 @@ export default function Home() {
                     <span className={r.level === 'red' ? s.soonRed : s.soonYellow}>
                       {renewalText(r)}
                     </span>
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          )}
+
+          {/* 敷金は返す義務のあるお金。遅れるとそのまま揉めごとになるので、この枠に出す */}
+          {moving.length > 0 && (
+            <ul className={s.noticeList}>
+              {moving.map((m) => (
+                <li key={m.lease.id}>
+                  <Link to={`/contracts/${m.lease.id}/moveout`}>
+                    {m.room?.roomNo}号室 {m.tenant?.name} の退去
+                    <span className={s.soonRed}>手続きが残り{m.remaining}件</span>
                   </Link>
                 </li>
               ))}

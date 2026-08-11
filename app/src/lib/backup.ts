@@ -6,6 +6,7 @@ import {
   type Expense,
   type Lease,
   type MetaRow,
+  type MoveOut,
   type Note,
   type Payment,
   type PaymentLogRow,
@@ -47,6 +48,7 @@ export interface BackupData {
   notes: Note[]
   schedules: Schedule[]
   equipment: Equipment[]
+  moveOuts: MoveOut[]
 }
 
 /** 控えファイルの中身そのもの */
@@ -76,6 +78,7 @@ function emptyTables(): BackupData {
     notes: [],
     schedules: [],
     equipment: [],
+    moveOuts: [],
   }
 }
 
@@ -88,7 +91,7 @@ export const BACKUP_TABLES = Object.keys(emptyTables()) as (keyof BackupData)[]
 export async function readAll(): Promise<BackupData> {
   const [
     meta, rooms, tenants, leases, rentTerms, payments, paymentLog, expenses, notes, schedules,
-    equipment,
+    equipment, moveOuts,
   ] = await Promise.all([
     db.meta.toArray(),
     db.rooms.toArray(),
@@ -101,10 +104,11 @@ export async function readAll(): Promise<BackupData> {
     db.notes.toArray(),
     db.schedules.toArray(),
     db.equipment.toArray(),
+    db.moveOuts.toArray(),
   ])
   return {
     meta, rooms, tenants, leases, rentTerms, payments, paymentLog, expenses, notes, schedules,
-    equipment,
+    equipment, moveOuts,
   }
 }
 
@@ -154,6 +158,8 @@ const MIGRATIONS: Record<number, (data: RawData) => RawData> = {
   2: (data) => ({ ...data, schedules: [] }),
   // 3 → 4: 設備の年式（給湯器・エアコン）が増えた。
   3: (data) => ({ ...data, equipment: [] }),
+  // 4 → 5: 退去の立会いと敷金の精算が増えた。
+  4: (data) => ({ ...data, moveOuts: [] }),
 }
 
 function asArray(value: unknown): unknown[] {
@@ -241,6 +247,7 @@ export async function restoreBackup(backup: Backup): Promise<Record<string, numb
     db.notes,
     db.schedules,
     db.equipment,
+    db.moveOuts,
   ]
 
   // 途中で失敗したら全部なかったことにする（半分だけ入った状態を作らない）
@@ -257,6 +264,7 @@ export async function restoreBackup(backup: Backup): Promise<Record<string, numb
     await db.notes.bulkPut(data.notes)
     await db.schedules.bulkPut(data.schedules)
     await db.equipment.bulkPut(data.equipment)
+    await db.moveOuts.bulkPut(data.moveOuts)
   })
 
   return countOf(data)
