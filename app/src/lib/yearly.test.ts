@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import type { Expense, Lease, Payment, RentTerm, Room } from '../db'
-import { availableYears, buildYear } from './yearly'
+import { availableYears, buildYear, firstRecordedMonth } from './yearly'
 
 /**
  * 年ごとのまとめの試験
@@ -100,7 +100,7 @@ describe('buildYear', () => {
     // 2月から12月は、まだ来ていないので未収に入らない
     expect(y.rentUnpaid).toBe(0)
     expect(y.unpaidCount).toBe(0)
-    expect(y.months[1].came).toBe(false)
+    expect(y.months[1].state).toBe('future')
     expect(y.months[1].unpaid).toBe(0)
   })
 
@@ -125,6 +125,7 @@ describe('buildYear', () => {
       payments: [],
       expenses: [],
       upTo: '2026-01',
+      from: '2026-01',
     })
     expect(y.months[0].unpaidRooms).toBe(1) // 101だけ
     expect(y.rentUnpaid).toBe(60000)
@@ -244,6 +245,7 @@ describe('buildYear', () => {
       payments: [],
       expenses: [],
       upTo: '2026-07',
+      from: '2026-01',
     })
     // 1〜6月は60,000（57,000＋3,000）、7月は63,000
     expect(y.months[0].unpaid).toBe(60000)
@@ -260,6 +262,7 @@ describe('buildYear', () => {
       payments: [],
       expenses: [],
       upTo: '2026-12',
+      from: '2026-01',
     })
     expect(y.unpaidCount).toBe(3) // 1月・2月・3月だけ
     expect(y.months[3].unpaid).toBe(0)
@@ -321,13 +324,104 @@ describe('buildYear', () => {
       payments: [],
       expenses: [],
       upTo: '2026-01',
+      from: '2026-01',
     })
     expect(y.empty).toBe(false)
   })
 
   it('upTo を渡さなければ今月までを「来た月」とする', () => {
-    const y = buildYear({ year: 2026, ...simple(), payments: [], expenses: [] })
-    expect(y.months.filter((m) => m.came).length).toBeGreaterThan(0)
+    const y = buildYear({
+      year: 2026,
+      ...simple(),
+      payments: [payment('l-1', '2026-01', 60000, '2026-01-05')],
+      expenses: [],
+    })
+    expect(y.months.filter((m) => m.state === 'done').length).toBeGreaterThan(0)
+  })
+})
+
+/**
+ * 年の途中から使い始めた場合。
+ *
+ * 8月から入金を付けはじめると、1〜7月には記録が1件も無い。
+ * そこを未収として足すと「まだ入っていない家賃が300万円あります」と出てしまい、
+ * 滞納されていると読まれる。実際には、ただ付けていなかっただけ。
+ */
+describe('buildYear（年の途中から使い始めたとき）', () => {
+  const midYear = () => ({
+    year: 2026,
+    ...simple(),
+    payments: [payment('l-1', '2026-07', 60000, '2026-07-05')],
+    expenses: [],
+    upTo: '2026-08',
+  })
+
+  it('入金を付けはじめる前の月は未収に数えない', () => {
+    const y = buildYear(midYear())
+    // まだなのは8月だけ。1〜6月は「付けていなかった」ので数えない
+    expect(y.rentUnpaid).toBe(60000)
+    expect(y.unpaidCount).toBe(1)
+  })
+
+  it('付けはじめる前の月に before の印をつけ、その数を返す', () => {
+    const y = buildYear(midYear())
+    expect(y.months.slice(0, 6).map((m) => m.state))
+      .toEqual(['before', 'before', 'before', 'before', 'before', 'before'])
+    expect(y.months[6].state).toBe('done') // 7月から数える
+    expect(y.months[8].state).toBe('future')
+    expect(y.beforeCount).toBe(6)
+  })
+
+  it('入金の記録が1件も無ければ、どの月も未収に数えない', () => {
+    const y = buildYear({ ...midYear(), payments: [] })
+    expect(y.rentUnpaid).toBe(0)
+    expect(y.beforeCount).toBe(12)
+  })
+
+  it('付けはじめる前の月でも、修繕・固定費は数える', () => {
+    // 過去の領収書をあとから入れることはある。そちらは記録があるので足してよい
+    const y = buildYear({
+      ...midYear(),
+      expenses: [expense('e-1', '2026-02-10', 80000, 'repair')],
+    })
+    expect(y.repair).toBe(80000)
+    expect(y.months[1].state).toBe('before')
+    expect(y.months[1].repair).toBe(80000)
+  })
+
+  it('翌年は、前の年から付けているので1月から数える', () => {
+    const y = buildYear({
+      year: 2027,
+      ...simple(),
+      leases: [lease('l-1', '101', '2026-01-01', '2027-12-31')],
+      payments: [payment('l-1', '2026-07', 60000, '2026-07-05')],
+      expenses: [],
+      upTo: '2027-03',
+    })
+    expect(y.months[0].state).toBe('done')
+    expect(y.beforeCount).toBe(0)
+    expect(y.unpaidCount).toBe(3) // 1月・2月・3月
+  })
+})
+
+describe('firstRecordedMonth', () => {
+  it('いちばん古い月を返す', () => {
+    expect(firstRecordedMonth([
+      payment('l-1', '2026-07', 1),
+      payment('l-1', '2026-02', 1),
+      payment('l-1', '2026-11', 1),
+    ])).toBe('2026-02')
+  })
+
+  it('1件も無ければ undefined', () => {
+    expect(firstRecordedMonth([])).toBeUndefined()
+  })
+
+  it('消した記録は見ない', () => {
+    expect(firstRecordedMonth([
+      { ...payment('l-1', '2026-02', 1), deletedAt: T },
+      payment('l-1', '2026-07', 1),
+    ])).toBe('2026-07')
   })
 })
 

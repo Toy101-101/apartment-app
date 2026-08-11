@@ -86,6 +86,17 @@
   line-height: 1.8;
 }
 
+/* 使い始める前の月についての断り。警告ではないので、色を立てない */
+.quietNote {
+  margin: 0 0 var(--sp-4);
+  border: 2px solid var(--line-soft);
+  border-radius: var(--radius);
+  padding: var(--sp-3) var(--sp-4);
+  font-size: var(--fs-sub);
+  color: var(--ink-2);
+  line-height: 1.8;
+}
+
 /* --- 内訳 --- */
 .card {
   border: var(--border) solid var(--line);
@@ -150,8 +161,9 @@
 .right { text-align: right; }
 .month { font-weight: 800; }
 .unpaid { color: var(--danger); }
-/* まだ来ていない月。数字が無いことが「抜け」ではないと分かるようにする */
-.future { color: #6b7280; }
+/* まだ来ていない月と、記録を付け始める前の月。
+   数字が無いことが「抜け」ではないと分かるように薄くする */
+.quiet { color: #6b7280; }
 
 /* --- 数え方の但し書き --- */
 .rules {

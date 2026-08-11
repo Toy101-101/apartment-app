@@ -103,6 +103,15 @@ export default function Yearly() {
             </p>
           )}
 
+          {/* 年の途中から使い始めた年に必ず出る。出さないと「1〜6月が空なのは壊れている」と読まれる */}
+          {summary.beforeCount > 0 && (
+            <p className={s.quietNote}>
+              {summary.beforeCount}か月ぶんは、
+              まだこのアプリで入金を付けはじめる前のため、数えていません。
+              その月の家賃は、通帳で確かめてください。
+            </p>
+          )}
+
           <section className={s.card}>
             <h2 className={s.title}>入ったお金の内訳</h2>
             <ul className={s.list}>
@@ -154,7 +163,7 @@ export default function Yearly() {
                 </thead>
                 <tbody>
                   {summary.months.map((m) => (
-                    <tr key={m.month} className={m.came ? '' : s.future}>
+                    <tr key={m.month} className={m.state === 'done' ? '' : s.quiet}>
                       <td className={s.month}>{m.no}月</td>
                       <td className={`${s.right} num`}>{m.received ? yen(m.received) : ''}</td>
                       <td className={`${s.right} ${s.unpaid} num`}>

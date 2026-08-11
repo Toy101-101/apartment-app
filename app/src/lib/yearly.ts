@@ -19,6 +19,10 @@ import { buildMonthRows, summarize, thisMonth } from './rent'
  *   受け取っていないお金を収入の欄に混ぜない
  * - **まだ来ていない月は未収に数えない**。8月に今年を開いたとき、9〜12月分が
  *   「まだ入っていない家賃」として並ぶと、滞納されているように読めてしまう
+ * - **記録を付け始める前の月も未収に数えない**。年の途中からこのアプリを使い始めると、
+ *   それ以前の月には入金の記録が1件も無い。これを未収として足すと
+ *   「まだ入っていない家賃が300万円あります」と出てしまい、滞納だと読まれる。
+ *   入金の記録がいちばん古い月より前は、**分からない**として黙る（無い数字を作らない）
  * - 礼金は収入に入れる。**敷金は入れない**（預かっているだけで、返すお金のため）。
  *   契約を更新すると敷金は次の契約に引き継がれる（`renewLease`）ので、
  *   仮に足すと更新のたびに二重に数えてしまう。数えないほうが正しく、かつ安全
@@ -26,6 +30,15 @@ import { buildMonthRows, summarize, thisMonth } from './rent'
  */
 
 const alive = <T extends { deletedAt?: string }>(row: T) => !row.deletedAt
+
+/**
+ * その月をどう扱うか
+ *
+ * - `before` … 入金を付け始めるより前。記録が無いだけなので、未収に数えない
+ * - `done`   … 数える月
+ * - `future` … まだ来ていない月
+ */
+export type MonthState = 'before' | 'done' | 'future'
 
 /** 1か月ぶんの数字 */
 export interface MonthTotal {
@@ -35,14 +48,13 @@ export interface MonthTotal {
   no: number
   /** 受け取った家賃・管理費 */
   received: number
-  /** まだ受け取っていない額（来ていない月は 0） */
+  /** まだ受け取っていない額（`done` の月だけ） */
   unpaid: number
-  /** まだの部屋数（来ていない月は 0） */
+  /** まだの部屋数（`done` の月だけ） */
   unpaidRooms: number
   repair: number
   fixed: number
-  /** その月がもう来ているか。来ていない月は表を薄く出す */
-  came: boolean
+  state: MonthState
 }
 
 /** 1年ぶんのまとめ */
@@ -56,6 +68,8 @@ export interface YearSummary {
   rentUnpaid: number
   /** まだ受け取っていない月の数 */
   unpaidCount: number
+  /** 入金を付け始めるより前だった月の数（0でなければ、その旨を画面に出す） */
+  beforeCount: number
   /** 礼金（その年に始まった契約のぶん） */
   keyMoney: number
   /** 入ったお金の合計 */
@@ -79,6 +93,11 @@ export interface YearInput {
   expenses: Expense[]
   /** どこまでを「もう来た月」とするか。既定は今月 */
   upTo?: string
+  /**
+   * どこから記録を付け始めたか（'YYYY-MM'）。
+   * 既定は**入金の記録がいちばん古い月**。1件も無ければ、まだ付け始めていないものとして扱う
+   */
+  from?: string
 }
 
 /** 'YYYY-MM' を作る */
@@ -90,16 +109,26 @@ function sumAmount(rows: { amount: number }[]): number {
   return rows.reduce((total, row) => total + row.amount, 0)
 }
 
+/** 入金の記録がいちばん古い月。1件も無ければ undefined */
+export function firstRecordedMonth(payments: Payment[]): string | undefined {
+  return payments
+    .filter(alive)
+    .map((p) => p.month)
+    .sort()[0]
+}
+
 export function buildYear({
-  year, rooms, leases, rentTerms, payments, expenses, upTo,
+  year, rooms, leases, rentTerms, payments, expenses, upTo, from,
 }: YearInput): YearSummary {
   const limit = upTo ?? thisMonth()
+  const start = from ?? firstRecordedMonth(payments)
   const livingExpenses = expenses.filter(alive)
 
   const months: MonthTotal[] = []
   for (let no = 1; no <= 12; no++) {
     const month = monthOfYear(year, no)
-    const came = month <= limit
+    const state: MonthState =
+      start === undefined || month < start ? 'before' : month > limit ? 'future' : 'done'
 
     // 家賃は②の画面と同じ組み立てを通す。数え方が2つあると、必ずどちらかがずれる
     const rows = buildMonthRows({ month, rooms, leases, tenants: [], rentTerms, payments })
@@ -110,11 +139,11 @@ export function buildYear({
       month,
       no,
       received: money.received,
-      unpaid: came ? money.unpaid.reduce((total, r) => total + r.due, 0) : 0,
-      unpaidRooms: came ? money.unpaid.length : 0,
+      unpaid: state === 'done' ? money.unpaid.reduce((total, r) => total + r.due, 0) : 0,
+      unpaidRooms: state === 'done' ? money.unpaid.length : 0,
       repair: sumAmount(ofMonth.filter((e) => e.kind === 'repair')),
       fixed: sumAmount(ofMonth.filter((e) => e.kind === 'fixed')),
-      came,
+      state,
     })
   }
 
@@ -140,6 +169,7 @@ export function buildYear({
     rentReceived,
     rentUnpaid,
     unpaidCount: months.filter((m) => m.unpaidRooms > 0).length,
+    beforeCount: months.filter((m) => m.state === 'before').length,
     keyMoney,
     income,
     repair,
