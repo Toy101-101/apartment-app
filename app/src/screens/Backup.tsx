@@ -4,7 +4,8 @@ import { useLiveQuery } from 'dexie-react-hooks'
 import { Screen } from '../components/Screen'
 import { db, setMeta } from '../db'
 import {
-  BACKUP_TABLES, importPhotoFiles, parseBackup, restoreBackup, shareBackup, type Backup,
+  BACKUP_TABLES, importPhotoFiles, parseBackup, photoIdFromFileName, restoreBackup, shareBackup,
+  type Backup, type SaveResult,
 } from '../lib/backup'
 import { formatDate, today } from '../lib/date'
 import s from './Backup.module.css'
@@ -29,6 +30,23 @@ const TABLE_LABEL: Record<string, string> = {
   expenses: '修繕・費用',
   notes: 'いきさつメモ',
   meta: '設定',
+}
+
+/**
+ * 送ったあとに出す文。
+ *
+ * ダウンロードに落ちた道（共有シートが無いPCなど）では**写真が付いてこない**。
+ * 黙っていると「控えを取った」と思ったまま写真だけ失うので、必ず書く。
+ */
+function shareMessage(result: SaveResult, photos: number): string {
+  if (result === 'shared') return '控えを送りました。'
+  if (result === 'shared-without-photos') {
+    return '控えを送りました。写真が多いため、今回は写真を除いて送っています。'
+  }
+  const saved = '控えをこの端末に保存しました。（ダウンロードの中にあります）'
+  return photos > 0
+    ? `${saved}この方法では写真${photos}枚は付いてきません。写真も残すには、スマホから送ってください。`
+    : saved
 }
 
 export default function Backup() {
@@ -62,13 +80,7 @@ export default function Backup() {
         return
       }
       await setMeta('lastShareAt', today())
-      setMessage(
-        result === 'shared'
-          ? '控えを送りました。'
-          : result === 'shared-without-photos'
-            ? '控えを送りました。写真が多いため、今回は写真を除いて送っています。'
-            : '控えをこの端末に保存しました。（ダウンロードの中にあります）',
-      )
+      setMessage(shareMessage(result, stat?.photos ?? 0))
     } catch {
       setFailed('うまくいきませんでした。もう一度お試しください。')
     } finally {
@@ -92,7 +104,10 @@ export default function Backup() {
     try {
       setPending({
         backup: parseBackup(await json.text()),
-        photos: list.filter((f) => f.type.startsWith('image/')),
+        // 種類（MIME）ではなく**名前**で選ぶ。LINEやファイルアプリを経由すると
+        // 種類が空のまま届くことがあり、そのとき写真が黙って落ちてしまう。
+        // 名前で選べば、あとで実際に戻せる枚数とここに出る枚数が必ず一致する
+        photos: list.filter((f) => photoIdFromFileName(f.name) !== undefined),
       })
     } catch (e) {
       setFailed(e instanceof Error ? e.message : 'このファイルは読み取れませんでした。')
@@ -212,6 +227,14 @@ export default function Backup() {
                 </b>
               </li>
             </ul>
+            {/* 控えに書いてある枚数より少ないときは、写真の選び忘れに気づけるようにする */}
+            {pending.backup.photoCount > pending.photos.length && (
+              <p className={s.warn}>
+                この控えは写真{pending.backup.photoCount}枚と一緒に書き出されています。
+                いま選ばれているのは{pending.photos.length}枚です。
+                残りの写真も一緒に選びなおすと、写真ももどります。
+              </p>
+            )}
             <button className={s.danger} onClick={handleRestore} disabled={busy}>
               {busy ? '読み込んでいます…' : 'はい、いまの記録を置きかえます'}
             </button>

@@ -60,7 +60,10 @@ export default function Print() {
                 <th>部屋</th>
                 <th>入居者（ふりがな）</th>
                 <th>電話</th>
-                <th className={s.right}>家賃</th>
+                {/* 表に出しているのは管理費を足したあとの額。紙だけを見る人が読み違えないよう見出しに書く */}
+                <th className={s.right}>
+                  家賃<span className={s.sub}>（管理費込み）</span>
+                </th>
                 <th>契約</th>
                 <th>保証人</th>
               </tr>
@@ -104,7 +107,7 @@ export default function Print() {
             </tbody>
             <tfoot>
               <tr>
-                <td colSpan={3}>入居中・退去予定の家賃（管理費込み）の合計</td>
+                <td colSpan={3}>入居中・退去予定の合計</td>
                 <td className={s.right}>{yen(rent ?? 0)}</td>
                 <td colSpan={2} />
               </tr>

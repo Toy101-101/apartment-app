@@ -96,6 +96,12 @@
   font-size: 0.8125rem;
   color: #555;
 }
+/* 見出しの下に小さく添える但し書き（列を横に広げないよう改行して置く） */
+.sub {
+  display: block;
+  font-size: 0.8125rem;
+  font-weight: 700;
+}
 .empty { color: #555; }
 
 /* --- 連絡のしかた --- */
