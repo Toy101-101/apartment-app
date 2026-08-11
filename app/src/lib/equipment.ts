@@ -47,9 +47,11 @@ export function ageInMonths(installedOn: string, on: string = today()): number {
   return (y2 - y1) * 12 + (m2 - m1)
 }
 
-/** '13年2か月' / '8か月' */
+/** '13年2か月' / '8か月' / '今月' */
 export function ageText(months: number): string {
   if (months < 0) return 'これから'
+  // 取り替えた直後は必ずここを通る。「0か月」は数字に見えて読みにくい
+  if (months === 0) return '今月'
   const years = Math.floor(months / 12)
   const rest = months % 12
   if (years === 0) return `${rest}か月`

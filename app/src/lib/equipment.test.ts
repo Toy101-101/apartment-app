@@ -57,6 +57,10 @@ describe('ageText', () => {
     expect(ageText(8)).toBe('8か月')
   })
 
+  it('取り替えた直後は「今月」と言う（0か月は読みにくい）', () => {
+    expect(ageText(0)).toBe('今月')
+  })
+
   it('ちょうどの年は月を言わない', () => {
     expect(ageText(24)).toBe('2年')
   })
