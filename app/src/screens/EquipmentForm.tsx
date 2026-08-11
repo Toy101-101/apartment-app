@@ -1,10 +1,11 @@
 import { useEffect, useState } from 'react'
 import { useLocation, useNavigate, useParams } from 'react-router-dom'
 import { useLiveQuery } from 'dexie-react-hooks'
+import { ConfirmDelete } from '../components/ConfirmDelete'
 import { Field } from '../components/Field'
 import { Screen } from '../components/Screen'
 import { db, type EquipmentKind } from '../db'
-import { monthKey, today } from '../lib/date'
+import { isRealDate, isRealMonth, monthKey, today } from '../lib/date'
 import {
   ageInMonths, ageText, createEquipment, DEFAULT_LIFE_YEARS, KIND_LABEL,
   removeEquipment, replaceEquipment, updateEquipment,
@@ -84,7 +85,7 @@ export default function EquipmentForm() {
   }
 
   async function save() {
-    if (!/^\d{4}-\d{2}$/.test(installedOn)) {
+    if (!isRealMonth(installedOn)) {
       setError('設置した年月を「2014-04」のように入れてください。')
       return
     }
@@ -111,6 +112,12 @@ export default function EquipmentForm() {
 
   async function replace() {
     if (id === undefined) return
+    // ここを確かめずに通すと、日付が空のまま保存され、新しい行の設置年月が空になる。
+    // 一覧の年数が「NaN」になり、③修繕・費用に日付の無い記録まで残ってしまう
+    if (!isRealDate(replacedOn)) {
+      setError('取り替えた日を入れてください。')
+      return
+    }
     setBusy(true)
     setError('')
     try {
@@ -303,9 +310,15 @@ export default function EquipmentForm() {
       </button>
 
       {editing && (
-        <button className={s.remove} onClick={() => void remove()} disabled={busy}>
-          この設備を消す
-        </button>
+        <ConfirmDelete
+          label="この設備を消す"
+          warning={`消すと、⑥の一覧に出なくなります。
+            設置した年月は、あとから思い出せないことが多い記録です。
+            取り替えたのであれば、消さずに「取り替えたことを記録する」を選んでください。
+            そうすれば「前のは何年もったか」が次の判断に残ります。`}
+          busy={busy}
+          onConfirm={() => void remove()}
+        />
       )}
     </Screen>
   )

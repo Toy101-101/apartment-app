@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { IS_DEMO } from '../lib/demo'
 import { loadSample } from '../lib/sample'
 import s from './DemoBanner.module.css'
 
@@ -13,6 +14,11 @@ import s from './DemoBanner.module.css'
  */
 export function DemoBanner() {
   const [busy, setBusy] = useState(false)
+
+  // 守りは2重にする。この帯の中のボタンは `loadSample()` ―― 本体の表を
+  // 消してから入れ直す、アプリでいちばん危ない処理 ―― に直結している。
+  // 呼び出す側（main.tsx）の条件を将来だれかが外しても、ここで必ず止まる
+  if (!IS_DEMO) return null
 
   return (
     <div className={s.wrap}>

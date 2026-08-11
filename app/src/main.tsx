@@ -60,8 +60,10 @@ async function prepare() {
   if (!IS_DEMO) return
   try {
     if (!(await hasSampleData())) await loadSample()
-  } catch {
-    // 見本を入れられなくても、画面自体は出す（空の画面のほうが、真っ白よりましなため）
+  } catch (e) {
+    // 見本を入れられなくても、画面自体は出す（空の画面のほうが、真っ白よりましなため）。
+    // ただし黙って空にすると「壊れている」と読まれるので、手がかりだけは残す
+    console.warn('見本データを入れられませんでした', e)
   }
 }
 

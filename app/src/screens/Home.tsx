@@ -47,9 +47,13 @@ export default function Home() {
       hasSampleData(),
       db.meta.get('lastShareAt'),
     ])
-    const [noticeDays, moveOuts] = await Promise.all([
+    const [noticeDays, moveOuts, firstPaid] = await Promise.all([
       readRenewalNoticeDays(),
       db.moveOuts.toArray(),
+      // 「いつから記録を付けはじめたか」。ここで読む入金は今年ぶんだけなので、
+      // buildYear に任せると「今年の最初の入金」を付けはじめた月と取りちがえ、
+      // 年ごとのまとめの画面と数字が食いちがう。月の索引で1件だけ引いて渡す
+      db.payments.orderBy('month').filter((p) => !p.deletedAt).first(),
     ])
     const equipmentRows = buildEquipmentRows({ equipment, rooms })
     return {
@@ -63,7 +67,9 @@ export default function Home() {
       renewals: needsAttention(buildContractRows({ leases, rooms, tenants, rentTerms, noticeDays })),
       expenses: expenses.filter((e) => !e.deletedAt).length,
       vacant: countStates(buildVacancyRows({ rooms, leases, tenants })).vacant,
-      yearNet: buildYear({ year, rooms, leases, rentTerms, payments, expenses }).net,
+      yearNet: buildYear({
+        year, rooms, leases, rentTerms, payments, expenses, from: firstPaid?.month,
+      }).net,
       lastShareAt: lastShare?.value,
       sample,
     }

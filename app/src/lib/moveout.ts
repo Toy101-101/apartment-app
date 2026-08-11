@@ -139,64 +139,88 @@ export async function readMoveOut(leaseId: string): Promise<MoveOut | undefined>
   return row && alive(row) ? row : undefined
 }
 
-/** 無ければ作る。手順を1つ押した瞬間に作られるので、退去にしただけでは行が増えない */
+/**
+ * 無ければ作る。手順を1つ押した瞬間に作られるので、退去にしただけでは行が増えない。
+ *
+ * **必ずトランザクションの中で呼ぶこと。** `moveOuts` の `leaseId` は重複を許さない鍵なので、
+ * 「読んで、無ければ作る」を外でやると、手順のボタンを続けて2回押しただけで
+ * 両方が「無い」と判断して2行を入れようとし、後のほうが弾かれて操作が消える。
+ * ここでまとめてしまえば、順番に処理されるので取りちがえようがない。
+ */
 async function ensure(leaseId: string): Promise<MoveOut> {
-  const found = await readMoveOut(leaseId)
-  if (found) return found
-  const at = now()
-  const row: MoveOut = {
-    id: newId(), createdAt: at, updatedAt: at,
-    leaseId, done: [], deductions: [],
-  }
-  await db.moveOuts.put(row)
-  return row
+  return db.transaction('rw', [db.moveOuts], async () => {
+    // 消した印のついた行も拾う。放っておくと、同じ leaseId で作り直せなくなる
+    const found = await db.moveOuts.where('leaseId').equals(leaseId).first()
+    if (found && alive(found)) return found
+    if (found) {
+      const revived = { ...found, updatedAt: now() }
+      delete revived.deletedAt
+      await db.moveOuts.put(revived)
+      return revived
+    }
+    const at = now()
+    const row: MoveOut = {
+      id: newId(), createdAt: at, updatedAt: at,
+      leaseId, done: [], deductions: [],
+    }
+    await db.moveOuts.put(row)
+    return row
+  })
 }
 
 /** 手順の済／未を切り替える */
 export async function toggleStep(leaseId: string, key: string): Promise<void> {
-  const row = await ensure(leaseId)
-  const done = row.done.includes(key)
-    ? row.done.filter((k) => k !== key)
-    : [...row.done, key]
+  await db.transaction('rw', [db.moveOuts], async () => {
+    const row = await ensure(leaseId)
+    const done = row.done.includes(key)
+      ? row.done.filter((k) => k !== key)
+      : [...row.done, key]
 
-  const next: MoveOut = { ...row, done, updatedAt: now() }
-  // 「敷金を返した」を押した日を、返した日として残す
-  if (key === 'refunded') {
-    if (done.includes(key)) next.refundedOn = today()
-    else delete next.refundedOn
-  }
-  await db.moveOuts.put(next)
+    const next: MoveOut = { ...row, done, updatedAt: now() }
+    // 「敷金を返した」を押した日を、返した日として残す
+    if (key === 'refunded') {
+      if (done.includes(key)) next.refundedOn = today()
+      else delete next.refundedOn
+    }
+    await db.moveOuts.put(next)
+  })
 }
 
 export async function addDeduction(
   leaseId: string, input: { title: string; amount: number; reason: string },
 ): Promise<string> {
-  const row = await ensure(leaseId)
   const id = newId()
-  await db.moveOuts.put({
-    ...row,
-    updatedAt: now(),
-    deductions: [...row.deductions, {
-      id,
-      title: input.title.trim(),
-      amount: input.amount,
-      reason: input.reason.trim(),
-    }],
+  await db.transaction('rw', [db.moveOuts], async () => {
+    const row = await ensure(leaseId)
+    await db.moveOuts.put({
+      ...row,
+      updatedAt: now(),
+      deductions: [...row.deductions, {
+        id,
+        title: input.title.trim(),
+        amount: input.amount,
+        reason: input.reason.trim(),
+      }],
+    })
   })
   return id
 }
 
 export async function removeDeduction(leaseId: string, deductionId: string): Promise<void> {
-  const row = await readMoveOut(leaseId)
-  if (!row) return
-  await db.moveOuts.put({
-    ...row,
-    updatedAt: now(),
-    deductions: row.deductions.filter((d) => d.id !== deductionId),
+  await db.transaction('rw', [db.moveOuts], async () => {
+    const row = await readMoveOut(leaseId)
+    if (!row) return
+    await db.moveOuts.put({
+      ...row,
+      updatedAt: now(),
+      deductions: row.deductions.filter((d) => d.id !== deductionId),
+    })
   })
 }
 
 export async function setMoveOutMemo(leaseId: string, memo: string): Promise<void> {
-  const row = await ensure(leaseId)
-  await db.moveOuts.put(compact({ ...row, updatedAt: now(), memo: memo.trim() || undefined }))
+  await db.transaction('rw', [db.moveOuts], async () => {
+    const row = await ensure(leaseId)
+    await db.moveOuts.put(compact({ ...row, updatedAt: now(), memo: memo.trim() || undefined }))
+  })
 }

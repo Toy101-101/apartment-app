@@ -1,9 +1,10 @@
 import { useEffect, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
+import { ConfirmDelete } from '../components/ConfirmDelete'
 import { Field } from '../components/Field'
 import { Screen } from '../components/Screen'
 import { db, type ScheduleKind } from '../db'
-import { today } from '../lib/date'
+import { isRealDate, today } from '../lib/date'
 import {
   createSchedule, KIND_LABEL, removeSchedule, TEMPLATES, updateSchedule,
 } from '../lib/schedules'
@@ -82,7 +83,7 @@ export default function ScheduleForm() {
       setError('何の予定かを入れてください。')
       return
     }
-    if (!nextDate) {
+    if (!isRealDate(nextDate)) {
       setError('次にする日を入れてください。')
       return
     }
@@ -247,9 +248,14 @@ export default function ScheduleForm() {
       </button>
 
       {editing && (
-        <button className={s.remove} onClick={() => void remove()} disabled={busy}>
-          この予定を消す
-        </button>
+        <ConfirmDelete
+          label="この予定を消す"
+          warning={`消すと、ホームのお知らせにも出なくなります。
+            火災保険や税金の納期は、落とすと取り返しがつきません。
+            もう来ないものでなければ、消さずに「次にする日」を直すほうが安全です。`}
+          busy={busy}
+          onConfirm={() => void remove()}
+        />
       )}
     </Screen>
   )

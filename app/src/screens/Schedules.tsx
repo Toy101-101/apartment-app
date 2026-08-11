@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { Screen } from '../components/Screen'
 import { db } from '../db'
-import { formatDate, today, yen } from '../lib/date'
+import { daysUntil, formatDate, isRealDate, today, yen } from '../lib/date'
 import {
   buildScheduleRows, completeSchedule, everyText, KIND_LABEL, type ScheduleRow,
 } from '../lib/schedules'
@@ -18,8 +18,14 @@ import s from './Schedules.module.css'
  * 一覧は**近い順**。過ぎているものが必ずいちばん上に来る。
  * 「済んだ」を押すと次回の日付が自動で進むので、日付を計算しなくてよい。
  */
-/** type="date" が使えない端末では文字で入るので、形を確かめてから使う */
-const DATE = /^\d{4}-\d{2}-\d{2}$/
+/**
+ * 済ませた日として受け付ける、いちばん先の日。
+ *
+ * 年を打ちまちがえて2062年にしたまま押されると、次回が2063年に飛び、
+ * その予定は二度とお知らせに出てこない（火災保険なら、無保険に気づけない）。
+ * 前払いのこともあるので少し先までは通すが、1年より先は必ず止める。
+ */
+const MAX_AHEAD_DAYS = 366
 
 export default function Schedules() {
   const [doing, setDoing] = useState<ScheduleRow | null>(null)
@@ -27,11 +33,14 @@ export default function Schedules() {
   const [amount, setAmount] = useState('')
   const [busy, setBusy] = useState(false)
   const [message, setMessage] = useState('')
+  /** 押した本人に見せる断り。成功の知らせとは分けて、ボタンのすぐ上に出す */
+  const [error, setError] = useState('')
 
   const rows = useLiveQuery(async () => buildScheduleRows(await db.schedules.toArray()), [])
 
   function start(row: ScheduleRow) {
     setMessage('')
+    setError('')
     setDoing(row)
     setDoneOn(today())
     // 「だいたいの金額」は入れない。直さずに押されると、見込みがそのまま実費として残ってしまう
@@ -40,10 +49,15 @@ export default function Schedules() {
 
   async function done() {
     if (!doing) return
-    if (!DATE.test(doneOn)) {
-      setMessage('済ませた日を入れてください。')
+    if (!isRealDate(doneOn)) {
+      setError('済ませた日を入れてください。')
       return
     }
+    if (daysUntil(doneOn) > MAX_AHEAD_DAYS) {
+      setError('済ませた日が1年より先になっています。年を確かめてください。')
+      return
+    }
+    setError('')
     setBusy(true)
     try {
       const yenAmount = Number(amount.replace(/[^0-9]/g, ''))
@@ -59,7 +73,7 @@ export default function Schedules() {
       setDoing(null)
       setAmount('')
     } catch {
-      setMessage('うまくいきませんでした。もう一度お試しください。')
+      setError('うまくいきませんでした。もう一度お試しください。')
     } finally {
       setBusy(false)
     }
@@ -148,10 +162,14 @@ export default function Schedules() {
                   金額を入れると、③修繕・費用にも記録が残ります。
                   空のままなら、次回の日付を進めるだけです。
                 </p>
+                {/* 断りは、押したボタンのすぐ上に出す。
+                    画面のいちばん上に出すと、下のほうのカードを操作した人には見えない */}
+                {error && <p className={s.error} role="alert">{error}</p>}
+
                 <button className={s.primary} onClick={() => void done()} disabled={busy}>
                   {busy
                     ? '記録しています…'
-                    : DATE.test(doneOn)
+                    : isRealDate(doneOn)
                       ? `${formatDate(doneOn)}に済んだことにする`
                       : '済んだことにする'}
                 </button>

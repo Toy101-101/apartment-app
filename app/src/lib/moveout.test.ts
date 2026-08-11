@@ -179,6 +179,29 @@ describe('退去の記録（読み書き）', () => {
     expect(await db.moveOuts.count()).toBe(1)
   })
 
+  it('立て続けに押しても、どれも取りこぼさない', async () => {
+    // 立会いの場で手順を続けて押すと、前の書き込みが終わる前に次が始まる。
+    // 「読んでから作る」を別々にやっていると、両方が「まだ無い」と見て
+    // 2行を入れようとし、後のほうが弾かれて、押したはずの手順が消える
+    await Promise.all([
+      toggleStep('l-1', 'keys'),
+      toggleStep('l-1', 'photos'),
+      toggleStep('l-1', 'inspected'),
+    ])
+    expect(await db.moveOuts.count()).toBe(1)
+    expect((await readMoveOut('l-1'))?.done.sort())
+      .toStrictEqual(['inspected', 'keys', 'photos'])
+  })
+
+  it('差し引きを立て続けに足しても、どれも残る', async () => {
+    await Promise.all([
+      addDeduction('l-1', { title: 'クロス', amount: 30000, reason: '大きな傷' }),
+      addDeduction('l-1', { title: '鍵', amount: 8000, reason: '1本が返らなかった' }),
+    ])
+    expect(await db.moveOuts.count()).toBe(1)
+    expect((await readMoveOut('l-1'))?.deductions).toHaveLength(2)
+  })
+
   it('「敷金を返した」を押した日が、返した日として残る', async () => {
     await toggleStep('l-1', 'refunded')
     expect((await readMoveOut('l-1'))?.refundedOn).toBeTruthy()

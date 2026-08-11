@@ -159,3 +159,16 @@
   color: var(--ink-2);
   line-height: 1.7;
 }
+
+/* 断り。済みにしたときの緑の知らせと同じ色にしないこと（読み違えるため） */
+.error {
+  margin: 0;
+  border: var(--border) solid var(--danger);
+  border-radius: var(--radius);
+  background: #fff;
+  padding: var(--sp-3);
+  font-size: var(--fs-body);
+  font-weight: 800;
+  color: var(--danger);
+  line-height: 1.7;
+}

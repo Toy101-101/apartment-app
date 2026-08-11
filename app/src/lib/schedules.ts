@@ -183,32 +183,39 @@ export interface CompleteResult {
 export async function completeSchedule(
   id: string, done: { date: string; amount?: number },
 ): Promise<CompleteResult> {
-  const schedule = await db.schedules.get(id)
-  if (!schedule) throw new Error('その予定が見つかりませんでした。')
-
   const result: CompleteResult = {}
 
-  if (done.amount !== undefined && done.amount > 0) {
-    result.expenseId = await createExpense({
-      kind: 'fixed',
-      date: done.date,
-      title: schedule.title,
-      amount: done.amount,
-      vendor: schedule.vendor,
-      memo: schedule.memo,
-      photoIds: [],
-    })
-  }
+  // 費用を残すことと、予定を進めることは**ひとまとまり**にする。
+  // 別々にすると、費用を書いた直後に失敗したとき、③には記録が残ったまま
+  // 予定は「まだ済んでいない」ことになる。次に開いたときも同じ予定が
+  // 「過ぎています」と出ているので、もう一度押され、③に同じ費用が二重に入る。
+  // 年ごとのまとめの支出が、そのぶん二重に膨らむ
+  await db.transaction('rw', [db.schedules, db.expenses], async () => {
+    const schedule = await db.schedules.get(id)
+    if (!schedule) throw new Error('その予定が見つかりませんでした。')
 
-  const nextDate = nextDateAfter(schedule.nextDate, schedule.everyMonths, done.date)
-  const at = now()
-  if (nextDate) {
-    result.nextDate = nextDate
-    await db.schedules.put({ ...schedule, nextDate, updatedAt: at })
-  } else {
-    // 1回きりの予定は、済ませたら一覧から消す
-    await db.schedules.put({ ...schedule, deletedAt: at, updatedAt: at })
-  }
+    if (done.amount !== undefined && done.amount > 0) {
+      result.expenseId = await createExpense({
+        kind: 'fixed',
+        date: done.date,
+        title: schedule.title,
+        amount: done.amount,
+        vendor: schedule.vendor,
+        memo: schedule.memo,
+        photoIds: [],
+      })
+    }
+
+    const nextDate = nextDateAfter(schedule.nextDate, schedule.everyMonths, done.date)
+    const at = now()
+    if (nextDate) {
+      result.nextDate = nextDate
+      await db.schedules.put({ ...schedule, nextDate, updatedAt: at })
+    } else {
+      // 1回きりの予定は、済ませたら一覧から消す
+      await db.schedules.put({ ...schedule, deletedAt: at, updatedAt: at })
+    }
+  })
 
   return result
 }

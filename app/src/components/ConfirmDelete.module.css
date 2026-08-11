@@ -1,0 +1,60 @@
+/* 消す前のひと呼吸。危ないほうの色は、確かめの段階になってから初めて出す */
+
+.remove,
+.yes,
+.no {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  min-height: var(--tap);
+  padding: var(--sp-2) var(--sp-3);
+  border-radius: var(--radius);
+  font-size: var(--fs-body);
+  font-weight: 800;
+}
+
+.remove {
+  margin-top: var(--sp-5);
+  border: var(--border) solid var(--danger);
+  background: #fff;
+  color: var(--danger);
+}
+
+.confirm {
+  display: grid;
+  gap: var(--sp-3);
+  margin-top: var(--sp-5);
+  border: var(--border) solid var(--danger);
+  border-radius: var(--radius);
+  background: var(--danger-weak);
+  padding: var(--sp-4);
+}
+
+.warning {
+  margin: 0;
+  font-size: var(--fs-lead);
+  font-weight: 800;
+  color: var(--danger);
+  line-height: 1.8;
+}
+
+/* 消すほうを塗りつぶしにしない。指が滑って当たる面を、やめるほうより目立たせない */
+.yes {
+  border: var(--border) solid var(--danger);
+  background: #fff;
+  color: var(--danger);
+}
+
+.no {
+  border: var(--border) solid var(--brand);
+  background: var(--brand);
+  color: #fff;
+}
+
+.remove:disabled,
+.yes:disabled,
+.no:disabled {
+  opacity: 0.55;
+  cursor: progress;
+}

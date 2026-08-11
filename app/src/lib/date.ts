@@ -27,6 +27,27 @@ export function today(now: Date = new Date()): string {
   return toISO(now)
 }
 
+/**
+ * 'YYYY-MM-DD' として**本当にある日**か。
+ *
+ * 形だけ見て通すと、`type="date"` が使えない端末で手打ちされた
+ * '2026-02-31' や '2026-13-01' がそのまま保存される。
+ * JavaScript はこれを3月3日・翌年1月に繰り上げてしまうので、
+ * 画面に出る日付と、控えや集計に入る文字がずれる。
+ * 組み立て直して同じ文字にもどるかで確かめる。
+ */
+export function isRealDate(iso: string): boolean {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(iso)) return false
+  return toISO(parseDate(iso)) === iso
+}
+
+/** 'YYYY-MM' として本当にある年月か（設備の設置年月に使う） */
+export function isRealMonth(iso: string): boolean {
+  if (!/^\d{4}-\d{2}$/.test(iso)) return false
+  const month = Number(iso.slice(5))
+  return month >= 1 && month <= 12
+}
+
 /** その日の n日後（前なら負の数）。'2026-08-25' → n=1 → '2026-08-26' */
 export function addDays(iso: string, n: number): string {
   const d = parseDate(iso)

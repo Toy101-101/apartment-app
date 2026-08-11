@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest'
 import {
   parseDate, toISO, addDays, daysUntil, formatDate, formatShort,
-  monthKey, formatMonth, shiftMonth, yen,
+  isRealDate, isRealMonth, monthKey, formatMonth, shiftMonth, yen,
 } from './date'
 
 describe('日付の解釈', () => {
@@ -15,6 +15,43 @@ describe('日付の解釈', () => {
 
   it('往復しても変わらない', () => {
     expect(toISO(parseDate('2019-05-01'))).toBe('2019-05-01')
+  })
+})
+
+describe('本当にある日か', () => {
+  it('ふつうの日は通る', () => {
+    expect(isRealDate('2026-08-12')).toBe(true)
+    expect(isRealDate('2028-02-29')).toBe(true) // うるう年
+  })
+
+  it('形が違えば通さない', () => {
+    expect(isRealDate('')).toBe(false)
+    expect(isRealDate('2026-8-12')).toBe(false)
+    expect(isRealDate('2026/08/12')).toBe(false)
+    expect(isRealDate('令和8年8月12日')).toBe(false)
+  })
+
+  it('無い日を通さない（JavaScriptが黙って繰り上げてしまうため）', () => {
+    expect(isRealDate('2026-02-31')).toBe(false) // 3月3日に化ける
+    expect(isRealDate('2026-13-01')).toBe(false) // 翌年1月に化ける
+    expect(isRealDate('2026-00-10')).toBe(false)
+    expect(isRealDate('2026-04-31')).toBe(false)
+    expect(isRealDate('2027-02-29')).toBe(false) // うるう年ではない
+  })
+})
+
+describe('本当にある年月か', () => {
+  it('ふつうの年月は通る', () => {
+    expect(isRealMonth('2014-04')).toBe(true)
+    expect(isRealMonth('2026-12')).toBe(true)
+  })
+
+  it('形の違うもの・無い月を通さない', () => {
+    expect(isRealMonth('')).toBe(false)
+    expect(isRealMonth('2014-4')).toBe(false)
+    expect(isRealMonth('2026-08-12')).toBe(false)
+    expect(isRealMonth('2026-13')).toBe(false)
+    expect(isRealMonth('2026-00')).toBe(false)
   })
 })
 
