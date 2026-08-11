@@ -1,5 +1,6 @@
 import {
   db,
+  now,
   SCHEMA_VERSION,
   type Expense,
   type Lease,
@@ -245,9 +246,79 @@ export async function importBackupJson(text: string): Promise<Record<string, num
   return restoreBackup(parseBackup(text))
 }
 
+// --- 写真の受け渡し -------------------------------------------------------
+
+/**
+ * 写真のファイル名。'写真-<id>.jpg'
+ *
+ * id を名前に入れておくと、受け取った側で読み込んだときに
+ * 「どの記録の写真か」を結び直せる。控えJSONには写真そのものは入らないので、
+ * この名前だけが手がかりになる。
+ */
+export function photoFileName(id: string): string {
+  return `写真-${id}.jpg`
+}
+
+/** ファイル名から写真の id を取り出す。控えの写真でなければ undefined */
+export function photoIdFromFileName(name: string): string | undefined {
+  const match = /^写真-(.+)\.jpe?g$/i.exec(name)
+  return match ? match[1] : undefined
+}
+
+/** 端末の写真を、送れるファイルの形にそろえる */
+export async function photoFiles(): Promise<File[]> {
+  const photos = await db.photos.toArray()
+  return photos.map((p) => new File([p.blob], photoFileName(p.id), { type: p.mime || 'image/jpeg' }))
+}
+
+/** 受け取った写真のファイルを、元の id のまま端末に戻す */
+export async function importPhotoFiles(files: File[]): Promise<number> {
+  let saved = 0
+  for (const file of files) {
+    const id = photoIdFromFileName(file.name)
+    if (!id) continue
+
+    // 大きさが読めなくても保存はする（読めないより残るほうがよい）
+    let width = 0
+    let height = 0
+    try {
+      const bitmap = await createImageBitmap(file)
+      width = bitmap.width
+      height = bitmap.height
+      bitmap.close()
+    } catch {
+      // そのまま
+    }
+
+    const at = now()
+    await db.photos.put({
+      id, createdAt: at, updatedAt: at,
+      blob: file.slice(0, file.size, file.type || 'image/jpeg'),
+      mime: file.type || 'image/jpeg',
+      width, height,
+    })
+    saved++
+  }
+  return saved
+}
+
 // --- 端末に渡す（ブラウザでのみ動く） -------------------------------------
 
-export type SaveResult = 'shared' | 'downloaded' | 'cancelled'
+export type SaveResult = 'shared' | 'shared-without-photos' | 'downloaded' | 'cancelled'
+
+function download(file: File): void {
+  const url = URL.createObjectURL(file)
+  const a = document.createElement('a')
+  a.href = url
+  a.download = file.name
+  a.click()
+  // すぐ消すとダウンロードが始まらない端末があるため、少し待ってから解放する
+  setTimeout(() => URL.revokeObjectURL(url), 10_000)
+}
+
+function canShare(files: File[]): boolean {
+  return typeof navigator.canShare === 'function' && navigator.canShare({ files })
+}
 
 /**
  * 控えを書き出して、家族に送るか端末に保存する。
@@ -255,29 +326,33 @@ export type SaveResult = 'shared' | 'downloaded' | 'cancelled'
  * スマホでは共有シート（LINE・メールなど）を出す。
  * File System Access API は iOS Safari で動かないので使わない。
  * 共有に対応していないPCなどでは、そのままダウンロードに落とす。
+ *
+ * 写真は控えJSONに入らない（base64で1.33倍に膨らむ）ので、
+ * **別のファイルとして並べて渡す**。枚数が多くて共有しきれないときは、
+ * JSONだけでも先に送る（何も送れないよりずっとよい）。
  */
-export async function shareBackup(): Promise<SaveResult> {
+export async function shareBackup(withPhotos = true): Promise<SaveResult> {
   const backup = await createBackup()
-  const name = backupFileName()
-  const file = new File([toJson(backup)], name, { type: 'application/json' })
+  const json = new File([toJson(backup)], backupFileName(), { type: 'application/json' })
+  const photos = withPhotos ? await photoFiles() : []
 
-  if (typeof navigator.canShare === 'function' && navigator.canShare({ files: [file] })) {
+  const attempts: { files: File[]; result: SaveResult }[] = [
+    ...(photos.length > 0 ? [{ files: [json, ...photos], result: 'shared' as const }] : []),
+    { files: [json], result: photos.length > 0 ? ('shared-without-photos' as const) : ('shared' as const) },
+  ]
+
+  for (const attempt of attempts) {
+    if (!canShare(attempt.files)) continue
     try {
-      await navigator.share({ files: [file] })
-      return 'shared'
+      await navigator.share({ files: attempt.files })
+      return attempt.result
     } catch (e) {
       // 本人が共有シートを閉じただけなら、失敗として騒がない
       if (e instanceof DOMException && e.name === 'AbortError') return 'cancelled'
-      // それ以外（共有に失敗した）はダウンロードで救う
+      // それ以外は、写真を減らすか、ダウンロードで救う
     }
   }
 
-  const url = URL.createObjectURL(file)
-  const a = document.createElement('a')
-  a.href = url
-  a.download = name
-  a.click()
-  // すぐ消すとダウンロードが始まらない端末があるため、少し待ってから解放する
-  setTimeout(() => URL.revokeObjectURL(url), 10_000)
+  download(json)
   return 'downloaded'
 }

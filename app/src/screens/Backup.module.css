@@ -1,0 +1,126 @@
+/* 控えと印刷 */
+
+.card {
+  border: var(--border) solid var(--line);
+  border-radius: var(--radius);
+  padding: var(--sp-4);
+  margin-bottom: var(--sp-4);
+}
+.title {
+  margin: 0 0 var(--sp-2);
+  font-size: var(--fs-title);
+  font-weight: 800;
+}
+.note {
+  margin: 0 0 var(--sp-3);
+  font-size: var(--fs-sub);
+  color: var(--ink-2);
+  line-height: 1.8;
+}
+.warn {
+  margin: 0 0 var(--sp-3);
+  border: 2px solid var(--warn);
+  border-radius: var(--radius);
+  background: var(--warn-weak);
+  padding: var(--sp-2) var(--sp-3);
+  font-size: var(--fs-sub);
+  color: var(--warn);
+  line-height: 1.7;
+}
+.small {
+  margin: var(--sp-2) 0 0;
+  font-size: var(--fs-sub);
+  color: var(--ink-2);
+  line-height: 1.7;
+}
+
+.list {
+  margin: 0 0 var(--sp-4);
+  padding: 0;
+  list-style: none;
+  font-size: var(--fs-sub);
+}
+.list li {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--sp-3);
+  padding: var(--sp-2) 0;
+  border-bottom: 1px solid var(--line-soft);
+}
+.list li:last-child { border-bottom: none; }
+.list b { font-weight: 800; }
+
+.primary,
+.secondary,
+.danger {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  min-height: var(--tap);
+  padding: var(--sp-2) var(--sp-3);
+  border-radius: var(--radius);
+  font-size: var(--fs-body);
+  font-weight: 800;
+  text-decoration: none;
+}
+.primary {
+  border: var(--border) solid var(--brand-dark);
+  background: var(--brand);
+  color: #fff;
+}
+.secondary {
+  border: var(--border) solid var(--brand);
+  background: var(--brand-weak);
+  color: var(--brand);
+}
+.danger {
+  border: var(--border) solid var(--danger);
+  background: var(--danger);
+  color: #fff;
+}
+.primary:disabled,
+.secondary:disabled,
+.danger:disabled {
+  opacity: 0.55;
+  cursor: progress;
+}
+
+/* 標準の「ファイルを選択」は見た目がそろわないので隠し、上のボタンから開く */
+.file {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  min-height: 0;
+  padding: 0;
+  border: 0;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.confirm {
+  margin-top: var(--sp-4);
+  border: var(--border) solid var(--danger);
+  border-radius: var(--radius);
+  background: var(--danger-weak);
+  padding: var(--sp-4);
+  display: grid;
+  gap: var(--sp-3);
+}
+.confirmTitle {
+  margin: 0;
+  font-size: var(--fs-lead);
+  font-weight: 800;
+  color: var(--danger);
+}
+.confirm .list { margin: 0; }
+
+.result,
+.failed {
+  margin: var(--sp-4) 0 0;
+  font-size: var(--fs-lead);
+  font-weight: 800;
+  line-height: 1.8;
+}
+.result { color: var(--ok); }
+.failed { color: var(--danger); }

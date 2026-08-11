@@ -21,7 +21,7 @@ export default function Home() {
   const month = thisMonth()
 
   const view = useLiveQuery(async () => {
-    const [rooms, leases, tenants, rentTerms, payments, expenses, sample] = await Promise.all([
+    const [rooms, leases, tenants, rentTerms, payments, expenses, sample, lastShare] = await Promise.all([
       db.rooms.toArray(),
       db.leases.toArray(),
       db.tenants.toArray(),
@@ -29,12 +29,14 @@ export default function Home() {
       db.payments.where('month').equals(month).toArray(),
       db.expenses.toArray(),
       hasSampleData(),
+      db.meta.get('lastShareAt'),
     ])
     return {
       money: summarize(buildMonthRows({ month, rooms, leases, tenants, rentTerms, payments })),
       renewals: needsAttention(buildContractRows({ leases, rooms, tenants, rentTerms })),
       expenses: expenses.filter((e) => !e.deletedAt).length,
       vacant: countStates(buildVacancyRows({ rooms, leases, tenants })).vacant,
+      lastShareAt: lastShare?.value,
       sample,
     }
   }, [month])
@@ -132,6 +134,15 @@ export default function Home() {
             </span>
           </Link>
         </div>
+
+        <Link className={s.keep} to="/backup">
+          <span className={s.keepName}>控えを家族に送る・印刷する</span>
+          <span className={s.keepSub}>
+            {view?.lastShareAt
+              ? `最後に送ったのは ${formatDate(view.lastShareAt)}`
+              : 'まだ一度も送っていません'}
+          </span>
+        </Link>
 
         {/* 見本を入れた端末にだけ出る。消せば二度と出ない */}
         {view?.sample && (

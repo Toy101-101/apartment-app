@@ -18,7 +18,10 @@ import {
   backupFileName,
   createBackup,
   importBackupJson,
+  importPhotoFiles,
   parseBackup,
+  photoFileName,
+  photoIdFromFileName,
   readAll,
   toJson,
 } from './backup'
@@ -211,6 +214,63 @@ describe('写真の扱い', () => {
     })
     await importBackupJson(toJson(await createBackup()))
     expect(await db.photos.count()).toBe(1)
+  })
+})
+
+describe('写真を別のファイルとして渡す', () => {
+  it('ファイル名に id を入れておく（どの記録の写真かを結び直せるように）', () => {
+    expect(photoFileName('abc-123')).toBe('写真-abc-123.jpg')
+    expect(photoIdFromFileName('写真-abc-123.jpg')).toBe('abc-123')
+  })
+
+  it('控えの写真でないファイルは、取りちがえない', () => {
+    expect(photoIdFromFileName('IMG_0421.jpg')).toBeUndefined()
+    expect(photoIdFromFileName('控え-2026-08-11.json')).toBeUndefined()
+    expect(photoIdFromFileName('写真.jpg')).toBeUndefined()
+  })
+
+  it('受け取った写真は、元の id のまま端末に戻る', async () => {
+    const files = [
+      new File(['1枚目'], photoFileName('photo-1'), { type: 'image/jpeg' }),
+      new File(['2枚目'], photoFileName('photo-2'), { type: 'image/jpeg' }),
+    ]
+    expect(await importPhotoFiles(files)).toBe(2)
+    expect(await db.photos.count()).toBe(2)
+    expect(await db.photos.get('photo-1')).toBeDefined()
+  })
+
+  it('関係のないファイルが混ざっていても、そこだけ飛ばす', async () => {
+    const files = [
+      new File(['写真'], photoFileName('photo-1'), { type: 'image/jpeg' }),
+      new File(['よその画像'], 'IMG_0421.jpg', { type: 'image/jpeg' }),
+    ]
+    expect(await importPhotoFiles(files)).toBe(1)
+    expect(await db.photos.count()).toBe(1)
+  })
+
+  it('写真をつけた費用が、控えを往復しても写真とつながったまま', async () => {
+    await db.expenses.put({
+      id: 'exp-1', createdAt: T1, updatedAt: T1,
+      kind: 'repair', date: '2026-07-20', title: '給湯器の交換', amount: 128000,
+      photoIds: ['photo-1'],
+    })
+    await db.photos.put({
+      id: 'photo-1', createdAt: T1, updatedAt: T1,
+      blob: new Blob(['見本の画像'], { type: 'image/jpeg' }),
+      mime: 'image/jpeg', width: 1600, height: 1200,
+    })
+
+    const json = toJson(await createBackup())
+    const sent = [new File([(await db.photos.get('photo-1'))!.blob], photoFileName('photo-1'), { type: 'image/jpeg' })]
+
+    // 別の端末のつもりで、全部消してから受け取る
+    await Promise.all(db.tables.map((t) => t.clear()))
+    await importBackupJson(json)
+    await importPhotoFiles(sent)
+
+    const expense = await db.expenses.get('exp-1')
+    expect(expense?.photoIds).toStrictEqual(['photo-1'])
+    expect(await db.photos.get(expense!.photoIds[0])).toBeDefined()
   })
 })
 

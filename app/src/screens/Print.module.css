@@ -1,0 +1,161 @@
+/* 読める1枚（印刷用）
+   紙は指で押さないので、この画面だけは17px・64pxの決まりを当てない。
+   A4の1枚に収まることを優先する。 */
+
+.page {
+  max-width: 860px;
+  margin: 0 auto;
+  padding: var(--sp-4);
+  background: #fff;
+  color: #000;
+}
+
+/* --- 操作の帯（紙には出さない） --- */
+.bar {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  margin-bottom: var(--sp-5);
+}
+.bar a,
+.bar button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: var(--tap);
+  padding: 0 var(--sp-4);
+  border: var(--border) solid var(--brand);
+  border-radius: var(--radius);
+  background: var(--brand-weak);
+  color: var(--brand);
+  font-size: var(--fs-body);
+  font-weight: 800;
+  text-decoration: none;
+}
+.bar button {
+  flex: 1;
+  border-color: var(--brand-dark);
+  background: var(--brand);
+  color: #fff;
+}
+
+.head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--sp-3);
+  border-bottom: 3px solid #000;
+  padding-bottom: var(--sp-2);
+  margin-bottom: var(--sp-3);
+}
+.head h1 {
+  margin: 0;
+  font-size: 1.5rem;
+  font-weight: 800;
+}
+.head p {
+  margin: 0;
+  font-size: 1rem;
+}
+
+/* --- 表 --- */
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9375rem;
+}
+.table th,
+.table td {
+  border: 1px solid #666;
+  padding: 6px 8px;
+  text-align: left;
+  vertical-align: top;
+  line-height: 1.5;
+}
+.table th {
+  background: #eceff1;
+  font-weight: 800;
+  white-space: nowrap;
+}
+.table tfoot td {
+  background: #f5f6f7;
+  font-weight: 800;
+}
+.right { text-align: right; }
+.no {
+  font-weight: 800;
+  white-space: nowrap;
+}
+.state {
+  display: block;
+  font-size: 0.8125rem;
+  font-weight: 700;
+  color: #555;
+}
+.kana {
+  font-size: 0.8125rem;
+  color: #555;
+}
+.empty { color: #555; }
+
+/* --- 連絡のしかた --- */
+.notes {
+  margin-top: var(--sp-4);
+  border: 1px solid #666;
+  padding: var(--sp-3);
+}
+.notes h2 {
+  margin: 0 0 var(--sp-2);
+  font-size: 1.0625rem;
+  font-weight: 800;
+}
+.notes dl {
+  margin: 0;
+  font-size: 0.9375rem;
+}
+.notes div {
+  display: flex;
+  gap: var(--sp-3);
+  padding: 4px 0;
+  border-bottom: 1px dotted #999;
+}
+.notes div:last-child { border-bottom: none; }
+.notes dt {
+  flex: 0 0 9em;
+  font-weight: 800;
+}
+.notes dd {
+  margin: 0;
+  line-height: 1.6;
+  white-space: pre-wrap;
+}
+
+.foot {
+  margin-top: var(--sp-4);
+  font-size: 0.8125rem;
+  color: #555;
+  line-height: 1.6;
+}
+
+/* --- 紙に出すとき --- */
+@media print {
+  .page {
+    max-width: none;
+    padding: 0;
+  }
+  /* 操作の帯は紙に出さない */
+  .bar { display: none; }
+
+  .table { font-size: 9.5pt; }
+  .table th,
+  .table td { padding: 3px 5px; }
+  /* 行が紙の途中で切れないようにする */
+  .table tr { page-break-inside: avoid; }
+  .notes { page-break-inside: avoid; }
+  .head { margin-bottom: 8pt; }
+}
+
+@page {
+  size: A4 landscape;
+  margin: 10mm;
+}

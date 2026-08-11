@@ -162,6 +162,30 @@
   cursor: not-allowed;
 }
 
+/* --- 控えと印刷への入口（4つの入口の下に常設する） --- */
+.keep {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: var(--sp-1);
+  min-height: var(--tap);
+  margin-top: var(--sp-4);
+  padding: var(--sp-3) var(--sp-4);
+  border: var(--border) solid var(--brand);
+  border-radius: var(--radius);
+  background: var(--brand-weak);
+  color: var(--brand);
+  text-decoration: none;
+}
+.keepName {
+  font-size: var(--fs-body);
+  font-weight: 800;
+}
+.keepSub {
+  font-size: var(--fs-sub);
+  color: var(--ink-2);
+}
+
 /* --- 見本が入っている端末にだけ出る欄（消せば二度と出ない） --- */
 .sample {
   margin-top: var(--sp-6);
