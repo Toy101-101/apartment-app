@@ -210,15 +210,23 @@
   color: var(--ink-2);
 }
 
-/* --- 設定 ---
-   めったに触らないので、帯にはせず静かに置く。
-   ただし押せる高さ（64px）は他と同じに保つ */
+/* --- 最近の操作と設定 ---
+   どちらもめったに触らないので、帯にはせず静かに置く。
+   ただし押せる高さ（64px）は他と同じに保つ。
+   横に2つ並べるが、文字を大きくすると並びきらないので、そのときは縦に落とす */
+.quiet {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-2);
+  margin-top: var(--sp-4);
+}
 .settings {
   display: flex;
+  flex: 1 1 8rem;
   align-items: center;
   justify-content: center;
+  min-width: 0;
   min-height: var(--tap);
-  margin-top: var(--sp-4);
   border: 2px solid var(--line-soft);
   border-radius: var(--radius);
   color: var(--ink-2);

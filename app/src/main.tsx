@@ -5,6 +5,7 @@ import './styles/tokens.css'
 import { DemoBanner } from './components/DemoBanner'
 import { IS_DEMO } from './lib/demo'
 import { hasSampleData, loadSample } from './lib/sample'
+import Activity from './screens/Activity'
 import Backup from './screens/Backup'
 import ContractDetail from './screens/ContractDetail'
 import ContractForm from './screens/ContractForm'
@@ -97,6 +98,7 @@ void prepare().then(() => createRoot(document.getElementById('root')!).render(
         <Route path="/equipment/:id/edit" element={<EquipmentForm />} />
         <Route path="/equipment/:id/replace" element={<EquipmentForm />} />
         <Route path="/yearly" element={<Yearly />} />
+        <Route path="/activity" element={<Activity />} />
         <Route path="/settings" element={<Settings />} />
         <Route path="/backup" element={<Backup />} />
         <Route path="/print" element={<Print />} />

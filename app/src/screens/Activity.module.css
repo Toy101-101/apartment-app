@@ -1,0 +1,83 @@
+/* 最近の操作 */
+
+.note {
+  margin: var(--sp-4) 0;
+  font-size: var(--fs-lead);
+  color: var(--ink-2);
+  line-height: 1.8;
+}
+
+.list {
+  list-style: none;
+  margin: var(--sp-3) 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-2);
+}
+
+/*
+ * 1件ぶん。押せるものと押せないものが混ざるので、
+ * 見た目は同じにして、押せるほうだけ :active で沈む
+ */
+.row {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-1);
+  min-height: var(--tap);
+  padding: var(--sp-3);
+  border: var(--border) solid var(--line);
+  border-radius: var(--radius);
+  color: inherit;
+  text-decoration: none;
+  /* 端末の文字を大きくしても、横並びの部分が外へ出ないように */
+  min-width: 0;
+}
+a.row:active { filter: brightness(0.96); }
+
+.at {
+  font-size: var(--fs-sub);
+  color: var(--ink-2);
+  font-variant-numeric: tabular-nums;
+}
+
+/* 何を触ったかが主役。いちばん大きく出す */
+.what {
+  font-size: var(--fs-lead);
+  font-weight: 800;
+  line-height: 1.4;
+  word-break: auto-phrase;
+  overflow-wrap: anywhere;
+}
+
+.foot {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--sp-2);
+  /* 文字を大きくすると横に並びきらない。そのときは下の行へ落とす */
+  flex-wrap: wrap;
+}
+.where {
+  font-size: var(--fs-sub);
+  color: var(--ink-2);
+}
+
+/* 「消した」だけ色を変える。あとから見て、いちばん気になるのがここのため */
+.action {
+  font-size: var(--fs-sub);
+  font-weight: 800;
+  color: var(--ink-2);
+}
+.removed {
+  font-size: var(--fs-sub);
+  font-weight: 800;
+  color: var(--danger);
+}
+
+.lead {
+  margin: var(--sp-4) 0 0;
+  font-size: var(--fs-sub);
+  color: var(--ink-2);
+  line-height: 1.8;
+}

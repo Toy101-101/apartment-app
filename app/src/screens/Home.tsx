@@ -283,10 +283,19 @@ export default function Home() {
           </span>
         </Link>
 
-        {/* 設定はめったに触らない。帯にはせず、いちばん下に静かに置く */}
-        <Link className={s.settings} to="/settings">
-          設定
-        </Link>
+        {/*
+          どちらもめったに触らない。帯にはせず、いちばん下に静かに置く。
+          「最近の操作」に件数を出さないのは、出すと全部の表を読むことになり、
+          上で3つに分けた意味が無くなるため（家賃を1件つけるたびに全部読み直す形に戻る）
+        */}
+        <div className={s.quiet}>
+          <Link className={s.settings} to="/activity">
+            最近の操作
+          </Link>
+          <Link className={s.settings} to="/settings">
+            設定
+          </Link>
+        </div>
 
         {/* 見本を入れた端末にだけ出る。消せば二度と出ない。
             見本モード（?demo=1）では中身が全部見本なので出さない（帯のボタンでやり直せる） */}

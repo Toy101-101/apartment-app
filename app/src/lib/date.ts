@@ -106,6 +106,20 @@ export function formatShort(iso: string): string {
   return `${d.getMonth() + 1}月${d.getDate()}日`
 }
 
+/**
+ * 記録した時刻（ISO）→ '8月12日 14:30'
+ *
+ * `formatDate` と違い、こちらは**何時何分まで**出す。
+ * 「さっき何を触ったか」を見る場所では、日付だけでは足りないため。
+ * 年は、今年でないときだけ出す（毎行に「令和8年」が並ぶと、肝心の中身が読みにくい）。
+ */
+export function formatAt(iso: string, now: Date = new Date()): string {
+  const d = new Date(iso)
+  const hm = `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`
+  const md = `${d.getMonth() + 1}月${d.getDate()}日 ${hm}`
+  return d.getFullYear() === now.getFullYear() ? md : `${formatYear(d.getFullYear())}${md}`
+}
+
 /** Date → 'YYYY-MM' */
 export function monthKey(date: Date): string {
   return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`

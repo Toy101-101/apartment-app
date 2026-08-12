@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest'
 import {
-  parseDate, toISO, addDays, daysUntil, formatDate, formatShort,
+  parseDate, toISO, addDays, daysUntil, formatAt, formatDate, formatShort,
   isRealDate, isRealMonth, monthKey, formatMonth, shiftMonth, yen,
 } from './date'
 
@@ -110,6 +110,24 @@ describe('和暦の表示', () => {
 
   it('短い表示は月日だけ', () => {
     expect(formatShort('2026-08-10')).toBe('8月10日')
+  })
+})
+
+describe('操作した時刻の表示', () => {
+  const now = new Date(2026, 7, 12)
+
+  it('今年なら、月日と何時何分だけを出す', () => {
+    // 「さっき何を触ったか」を見る場所なので、日付だけでは足りない
+    expect(formatAt(new Date(2026, 7, 12, 14, 30).toISOString(), now)).toBe('8月12日 14:30')
+  })
+
+  it('1桁の分は0を足す（14:5 と出さない）', () => {
+    expect(formatAt(new Date(2026, 7, 12, 9, 5).toISOString(), now)).toBe('8月12日 09:05')
+  })
+
+  it('今年でなければ、年も出す', () => {
+    expect(formatAt(new Date(2025, 11, 31, 23, 59).toISOString(), now))
+      .toBe('令和7年12月31日 23:59')
   })
 })
 

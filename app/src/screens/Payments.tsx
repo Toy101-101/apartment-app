@@ -2,7 +2,7 @@
 import { useLiveQuery } from 'dexie-react-hooks'
 import { Screen } from '../components/Screen'
 import { db } from '../db'
-import { formatMonth, formatShort, shiftMonth, yen } from '../lib/date'
+import { formatAt, formatMonth, formatShort, shiftMonth, yen } from '../lib/date'
 import { togglePaid, undoToggle, type ToggleResult } from '../lib/payments'
 import { buildMonthRows, summarize, thisMonth, type MonthRow } from '../lib/rent'
 import s from './Payments.module.css'
@@ -26,12 +26,6 @@ const ACTION_LABEL: Record<string, string> = {
 }
 
 /** ISO日時 → '8月11日 14:30' */
-function formatAt(iso: string): string {
-  const d = new Date(iso)
-  const hm = `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`
-  return `${d.getMonth() + 1}月${d.getDate()}日 ${hm}`
-}
-
 export default function Payments() {
   const [month, setMonth] = useState(thisMonth())
   const [pending, setPending] = useState<ToggleResult | null>(null)
