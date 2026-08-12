@@ -25,6 +25,19 @@ import {
 const T = '2026-08-01T00:00:00.000Z'
 const base = { createdAt: T, updatedAt: T }
 
+/**
+ * 「最近の操作」の画面のための時刻。
+ *
+ * 見本の記録は全部いっぺんに作るので、そのままだと時刻が `T` でそろってしまう。
+ * あの画面は**同じ時刻をひとつの操作としてまとめる**ので、全部が1件に見えてしまい、
+ * 画面の見た目が確かめられない。そこで、直近の何件かだけ時刻をずらしてある。
+ *
+ * 実際に使うときは `db.ts` の `now()` が必ず違う時刻を返すので、こういう手当ては要らない。
+ * 時刻は UTC で書く（画面には日本時間で出るので、9時間ぶん前になる）。
+ */
+const touched = (iso: string) => ({ createdAt: T, updatedAt: iso })
+const madeAt = (iso: string) => ({ createdAt: iso, updatedAt: iso })
+
 const rooms: Room[] = [
   { id: 'r-101', ...base, roomNo: '101', floor: 1, sortOrder: 1 },
   { id: 'r-102', ...base, roomNo: '102', floor: 1, sortOrder: 2, memo: '2026年6月末に退去。給湯器は新品に交換済み' },
@@ -120,6 +133,15 @@ const PAID: Record<string, string[]> = {
   '2026-08': ['101', '104', '105', '201', '204', '205'], // 103と202がまだ
 }
 
+/**
+ * 「最近の操作」に出したい入金だけ、時刻をずらす（→ 上の `touched`）。
+ * 家賃を済にするのは、この物件でいちばんよくする操作なので、見本にも出しておく。
+ */
+const RECENT_PAID: Record<string, string> = {
+  'pay-2026-08-205': '2026-08-12T00:30:00.000Z', // 8月12日 09:30
+  'pay-2026-08-201': '2026-08-12T00:28:00.000Z', // 8月12日 09:28
+}
+
 function buildPayments(): Payment[] {
   const rentOf = (no: string, month: string) =>
     rentTerms
@@ -130,8 +152,9 @@ function buildPayments(): Payment[] {
   for (const [month, nos] of Object.entries(PAID)) {
     for (const no of nos) {
       const t = rentOf(no, month)
+      const id = `pay-${month}-${no}`
       out.push({
-        id: `pay-${month}-${no}`, ...base,
+        id, createdAt: T, updatedAt: RECENT_PAID[id] ?? T,
         leaseId: `l-${no}`, month, amount: t.rent + t.mgmtFee,
         paidOn: `${month}-05`, method: 'transfer',
       })
@@ -158,7 +181,8 @@ const notes: Note[] = [
  * 金額だけ並んでいる見本では、この画面の値打ちが伝わらない。
  */
 const expenses: Expense[] = [
-  { id: 'ex-1', ...base, kind: 'repair', date: '2026-08-03', title: '台所の水漏れ',
+  // 8月3日 19:40 に記録した（「最近の操作」に出る）
+  { id: 'ex-1', ...madeAt('2026-08-03T10:40:00.000Z'), kind: 'repair', date: '2026-08-03', title: '台所の水漏れ',
     amount: 18000, vendor: '○○水道', roomId: 'r-201', photoIds: [],
     memo: '流しの下の継ぎ手から少しずつ漏れていた。床の板が黒く変わりかけていたので、\n早めに呼んで正解だった。同じ年式の部屋は、次の立会いのときに一緒に見ておく。' },
   { id: 'ex-2', ...base, kind: 'fixed', date: '2026-07-31', title: '貯水槽の清掃',
@@ -187,7 +211,8 @@ const expenses: Expense[] = [
  * 全部まだ先だと、ホームのお知らせ枠に何も出ず、この機能が見えない。
  */
 const schedules: Schedule[] = [
-  { id: 'sc-1', ...base, title: '消防設備点検', kind: 'inspection',
+  // 8月12日 08:05 に直した（「最近の操作」に出る）
+  { id: 'sc-1', ...touched('2026-08-11T23:05:00.000Z'), title: '消防設備点検', kind: 'inspection',
     nextDate: '2026-08-08', everyMonths: 6, noticeDays: 60, amount: 33000, vendor: '××防災',
     memo: '半年に1回。前回は2月。報告書は市役所に出す。' },
   { id: 'sc-2', ...base, title: '固定資産税の納付', kind: 'tax',
@@ -213,7 +238,8 @@ const equipment: Equipment[] = [
   { id: 'eq-1', ...base, kind: 'waterHeater', roomId: 'r-101', installedOn: '2012-05',
     lifeYears: 12, maker: '△△工業', model: 'GT-1650',
     memo: '入居が長い部屋。止まる前に、次の空室を待たずに替えるか考えておく。' },
-  { id: 'eq-2', ...base, kind: 'aircon', roomId: 'r-203', installedOn: '2011-07',
+  // 8月10日 09:12 に直した（「最近の操作」に出る）
+  { id: 'eq-2', ...touched('2026-08-10T00:12:00.000Z'), kind: 'aircon', roomId: 'r-203', installedOn: '2011-07',
     lifeYears: 13, maker: '◇◇電機',
     memo: '空室のうちに替える。この年式だと修理の部品がもう無い。' },
   { id: 'eq-3', ...base, kind: 'waterHeater', roomId: 'r-103', installedOn: '2015-09',
@@ -243,7 +269,8 @@ const equipment: Equipment[] = [
  * 全部済んだ状態だと、ホームのお知らせにも出ず、この画面にたどり着けない。
  */
 const moveOuts: MoveOut[] = [
-  { id: 'mo-102', ...base, leaseId: 'l-102',
+  // 8月11日 15:20 に手続きを進めた（「最近の操作」に出る）
+  { id: 'mo-102', ...touched('2026-08-11T06:20:00.000Z'), leaseId: 'l-102',
     done: ['appointment', 'inspected', 'photos', 'keys'],
     deductions: [
       { id: 'dd-1', title: 'クロスの張り替え（居室の一面）', amount: 40000,
