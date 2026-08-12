@@ -22,6 +22,7 @@ import Print from './screens/Print'
 import ScheduleForm from './screens/ScheduleForm'
 import Schedules from './screens/Schedules'
 import Settings from './screens/Settings'
+import Trash from './screens/Trash'
 import Vacancy from './screens/Vacancy'
 import Yearly from './screens/Yearly'
 
@@ -100,6 +101,7 @@ void prepare().then(() => createRoot(document.getElementById('root')!).render(
         <Route path="/yearly" element={<Yearly />} />
         <Route path="/activity" element={<Activity />} />
         <Route path="/settings" element={<Settings />} />
+        <Route path="/trash" element={<Trash />} />
         <Route path="/backup" element={<Backup />} />
         <Route path="/print" element={<Print />} />
         {/* 知らないURLはホームに落とす（控えのリンクなどを踏んでも迷子にならない） */}

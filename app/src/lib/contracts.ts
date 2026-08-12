@@ -322,6 +322,15 @@ export async function removeNote(noteId: string): Promise<void> {
   await db.notes.put({ ...note, deletedAt: now(), updatedAt: now() })
 }
 
+/** 消したのを取り消す（「消したものを戻す」から呼ぶ） */
+export async function restoreNote(noteId: string): Promise<void> {
+  const note = await db.notes.get(noteId)
+  if (!note) return
+  const next = { ...note, updatedAt: now() }
+  delete next.deletedAt
+  await db.notes.put(next)
+}
+
 /** ある契約・部屋につくメモを、新しい順に返す */
 export function sortNotes(notes: Note[]): Note[] {
   return notes

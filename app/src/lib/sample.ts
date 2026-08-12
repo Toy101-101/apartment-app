@@ -172,6 +172,10 @@ const notes: Note[] = [
     body: '転勤のため2026年9月30日で退去したいと電話で連絡を受けた。\n敷金は畳の傷み具合を見てから精算する約束。' },
   { id: 'n-4', ...base, targetType: 'room', targetId: 'r-102', date: '2026-06-30', author: '祖父', byVoice: false,
     body: '前の入居者（大学生）が卒業で退去。給湯器を新品に交換したので、募集のときは「給湯器新品」と出すこと。' },
+  // 消したメモ。種類の違うものが2件並ぶところを、見本でも見せる
+  { id: 'n-5', ...base, targetType: 'lease', targetId: 'l-101', date: '2026-08-08', author: '祖父', byVoice: true,
+    deletedAt: '2026-08-12T01:40:00.000Z',
+    body: '言いまちがえて音声で入れてしまったメモ。消してあるが、ここから戻せる。' },
 ]
 
 /**
@@ -202,6 +206,11 @@ const expenses: Expense[] = [
     memo: '玄関と階段の6か所。切れるたびに脚立を出していたのが無くなった。\n電気代も月に千円ほど下がっている。' },
   { id: 'ex-7', ...base, kind: 'fixed', date: '2026-02-25', title: '固定資産税（第4期）',
     amount: 41000, photoIds: [] },
+  // 打ちまちがえて消したもの。「消したものを戻す」に出る（一覧や年ごとのまとめには出ない）
+  { id: 'ex-8', ...base, kind: 'repair', date: '2026-08-05', title: '玄関ドアの立て付け',
+    amount: 9000, vendor: '△△工業', roomId: 'r-203', photoIds: [],
+    deletedAt: '2026-08-11T02:15:00.000Z',
+    memo: '金額を打ちまちがえたので、いったん消したもの。' },
 ]
 
 /**

@@ -166,6 +166,15 @@ export async function removeSchedule(id: string): Promise<void> {
   await db.schedules.put({ ...before, deletedAt: at, updatedAt: at })
 }
 
+/** 消したのを取り消す（「消したものを戻す」から呼ぶ） */
+export async function restoreSchedule(id: string): Promise<void> {
+  const before = await db.schedules.get(id)
+  if (!before) return
+  const next = { ...before, updatedAt: now() }
+  delete next.deletedAt
+  await db.schedules.put(next)
+}
+
 export interface CompleteResult {
   /** 次にすることの日。1回きりの予定なら入らない */
   nextDate?: string
@@ -212,8 +221,9 @@ export async function completeSchedule(
       result.nextDate = nextDate
       await db.schedules.put({ ...schedule, nextDate, updatedAt: at })
     } else {
-      // 1回きりの予定は、済ませたら一覧から消す
-      await db.schedules.put({ ...schedule, deletedAt: at, updatedAt: at })
+      // 1回きりの予定は、済ませたら一覧から消す。
+      // 「消した」のではないと分かるように済ませた日を残す（→ lib/trash.ts）
+      await db.schedules.put({ ...schedule, completedOn: done.date, deletedAt: at, updatedAt: at })
     }
   })
 

@@ -23,9 +23,10 @@ import { labelOf } from './equipment'
  *   まとめないと、契約を1件登録しただけで入居者・契約・家賃の3行が並んでしまう
  * - **部屋と入居者は出さない。** それだけを作り直すことは無く、必ず契約の操作について回る。
  *   契約の行が同じことを言うので、二重になる
+ * - **ここは見るだけの画面。** 消したものを戻すのは「消したものを戻す」（`lib/trash.ts`）
  */
 
-export type ActivityAction = '作った' | '直した' | '消した'
+export type ActivityAction = '作った' | '直した' | '消した' | '済ませた'
 
 export interface ActivityEntry {
   /** 並べ替えに使う時刻（ISO） */
@@ -102,8 +103,10 @@ export function buildActivity(input: ActivityInput): ActivityEntry[] {
   const add = (
     row: { createdAt: string; updatedAt: string; deletedAt?: string },
     priority: number, where: string, what: string, to?: string,
+    /** 行の印から決まる言い方で足りないときだけ渡す（1回きりの予定を済ませたとき） */
+    action?: ActivityAction,
   ) => {
-    all.push({ at: row.updatedAt, action: actionOf(row), priority, where, what, to })
+    all.push({ at: row.updatedAt, action: action ?? actionOf(row), priority, where, what, to })
   }
 
   for (const l of leases) {
@@ -128,7 +131,10 @@ export function buildActivity(input: ActivityInput): ActivityEntry[] {
     add(n, PRIORITY.note, '① いきさつメモ', who ? `${who} のいきさつメモ` : 'いきさつメモ', to)
   }
   for (const s of schedules) {
-    add(s, PRIORITY.schedule, '⑤ 年間の予定', s.title || '（名前なし）', '/schedules')
+    // 1回きりの予定は済ませると消えるが、それは「消した」ではない。
+    // ここで「消した」と出すと、「消したものを戻す」に無いものを探させてしまう
+    const done = s.completedOn && s.deletedAt ? '済ませた' as const : undefined
+    add(s, PRIORITY.schedule, '⑤ 年間の予定', s.title || '（名前なし）', '/schedules', done)
   }
   for (const e of equipment) {
     const target = e.roomId ? `${roomById.get(e.roomId)?.roomNo ?? '?'}号室` : '建物全体'

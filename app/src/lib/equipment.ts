@@ -200,6 +200,15 @@ export async function removeEquipment(id: string): Promise<void> {
   await db.equipment.put({ ...before, deletedAt: at, updatedAt: at })
 }
 
+/** 消したのを取り消す（「消したものを戻す」から呼ぶ） */
+export async function restoreEquipment(id: string): Promise<void> {
+  const before = await db.equipment.get(id)
+  if (!before) return
+  const next = { ...before, updatedAt: now() }
+  delete next.deletedAt
+  await db.equipment.put(next)
+}
+
 export interface ReplaceResult {
   /** 新しく作った設備の id */
   newId: string

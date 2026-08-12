@@ -148,4 +148,16 @@ describe('見本だけを消す', () => {
     await removeSample()
     expect(await db.paymentLog.count()).toBe(0)
   })
+
+  it('消したものが見本にも入っている（「消したものを戻す」が空にならないように）', async () => {
+    const { buildTrash } = await import('./trash')
+    const [expenses, schedules, equipment, notes, rooms, tenants, leases] = await Promise.all([
+      db.expenses.toArray(), db.schedules.toArray(), db.equipment.toArray(),
+      db.notes.toArray(), db.rooms.toArray(), db.tenants.toArray(), db.leases.toArray(),
+    ])
+    const rows = buildTrash({ rooms, tenants, leases, expenses, schedules, equipment, notes })
+    // 種類の違うものが並ぶところを見せたいので、2件以上・2種類以上あること
+    expect(rows.length).toBeGreaterThanOrEqual(2)
+    expect(new Set(rows.map((r) => r.kind)).size).toBeGreaterThanOrEqual(2)
+  })
 })

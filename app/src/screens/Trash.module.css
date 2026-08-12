@@ -1,0 +1,127 @@
+/* 消したものを戻す */
+
+.note {
+  margin: var(--sp-4) 0;
+  font-size: var(--fs-lead);
+  color: var(--ink-2);
+  line-height: 1.8;
+}
+
+.lead {
+  margin: var(--sp-3) 0 0;
+  font-size: var(--fs-lead);
+  line-height: 1.8;
+}
+
+.list {
+  list-style: none;
+  margin: var(--sp-3) 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-3);
+}
+
+/* 1件ぶん */
+.row,
+.rowDone {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-1);
+  padding: var(--sp-3);
+  border: var(--border) solid var(--line);
+  border-radius: var(--radius);
+  /* 端末の文字を大きくしても、中身が横へはみ出さないように */
+  min-width: 0;
+}
+
+/* 戻したものは、その場に残して色を変える。消えると「本当に戻ったか」が確かめられない */
+.rowDone {
+  border-color: var(--ok);
+  background: var(--ok-weak);
+}
+
+.at {
+  font-size: var(--fs-sub);
+  color: var(--ink-2);
+  font-variant-numeric: tabular-nums;
+}
+
+/* 何を消したかが主役。いちばん大きく出す */
+.what {
+  font-size: var(--fs-lead);
+  font-weight: 800;
+  line-height: 1.4;
+  word-break: auto-phrase;
+  overflow-wrap: anywhere;
+}
+
+/* 日付や金額。同じ名前のものを見分けるための欄 */
+.detail {
+  font-size: var(--fs-sub);
+  color: var(--ink-2);
+  line-height: 1.6;
+  word-break: auto-phrase;
+  overflow-wrap: anywhere;
+}
+
+.where {
+  font-size: var(--fs-sub);
+  color: var(--ink-2);
+  font-weight: 800;
+}
+
+.restore {
+  margin-top: var(--sp-2);
+  width: 100%;
+  min-height: var(--tap);
+  padding: var(--sp-2) var(--sp-3);
+  border: var(--border) solid var(--brand);
+  border-radius: var(--radius);
+  background: var(--surface);
+  color: var(--brand);
+  font-size: var(--fs-body);
+  font-weight: 800;
+}
+.restore:active { filter: brightness(0.96); }
+.restore:disabled { opacity: 0.5; }
+
+.doneBox {
+  margin-top: var(--sp-2);
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-2);
+}
+
+.doneText {
+  margin: 0;
+  font-size: var(--fs-body);
+  font-weight: 800;
+  color: var(--ok);
+}
+
+/* 戻したものが、どこで見られるか */
+.open {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: var(--tap);
+  padding: var(--sp-2) var(--sp-3);
+  border: var(--border) solid var(--line);
+  border-radius: var(--radius);
+  background: var(--surface);
+  color: var(--ink);
+  font-size: var(--fs-body);
+  font-weight: 800;
+  text-decoration: none;
+  text-align: center;
+  word-break: auto-phrase;
+}
+.open:active { filter: brightness(0.96); }
+
+.foot {
+  margin: var(--sp-4) 0 0;
+  font-size: var(--fs-sub);
+  color: var(--ink-2);
+  line-height: 1.8;
+}

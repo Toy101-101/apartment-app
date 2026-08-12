@@ -81,3 +81,12 @@ a.row:active { filter: brightness(0.96); }
   color: var(--ink-2);
   line-height: 1.8;
 }
+
+/* 説明文の中のリンク（消したものを戻す） */
+.link {
+  color: var(--brand);
+  font-weight: 800;
+  /* 文の中に混じるので、押せる場所の高さは決まりから外す。
+     指で押しやすいよう、上下に少し余白を足して当たりを広げる */
+  padding: var(--sp-1) 0;
+}

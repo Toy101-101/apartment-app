@@ -284,13 +284,19 @@ export default function Home() {
         </Link>
 
         {/*
-          どちらもめったに触らない。帯にはせず、いちばん下に静かに置く。
+          どれもめったに触らない。帯にはせず、いちばん下に静かに置く。
+          「消したものを戻す」は、慌てて探す人がいちばん先に見るのがホームなので、
+          消した画面の中ではなくここに置いた（`.quiet` は折り返すので、
+          文字を大きくすると3つが縦に並ぶ）。
           「最近の操作」に件数を出さないのは、出すと全部の表を読むことになり、
           上で3つに分けた意味が無くなるため（家賃を1件つけるたびに全部読み直す形に戻る）
         */}
         <div className={s.quiet}>
           <Link className={s.settings} to="/activity">
             最近の操作
+          </Link>
+          <Link className={s.settings} to="/trash">
+            消したものを戻す
           </Link>
           <Link className={s.settings} to="/settings">
             設定
