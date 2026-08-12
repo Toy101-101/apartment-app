@@ -8,6 +8,7 @@ import {
   buildEquipmentRows,
   createEquipment,
   DEFAULT_LIFE_YEARS,
+  labelOf,
   levelOf,
   lifeText,
   needsAttention,
@@ -333,5 +334,65 @@ describe('取り替える', () => {
   it('無い設備を取り替えようとしたら、日本語で断る', async () => {
     await expect(replaceEquipment('ない-id', { date: '2026-08-11' }))
       .rejects.toThrow(/見つかりませんでした/)
+  })
+
+  /*
+   * 呼び名は「それが何であるか」なので、中身を替えても変わらない。
+   * ここが引き継がれないと、受水槽を替えたとたんに一覧が「その他」に戻り、
+   * 建物全体のものが2つ以上あるときに、どれがどれだか分からなくなる。
+   */
+  it('呼び名は、入れなければ前のものから引き継ぐ', async () => {
+    const id = await createEquipment({
+      kind: 'other', name: '受水槽', installedOn: '2004-04', lifeYears: 22,
+    })
+    const result = await replaceEquipment(id, { date: '2026-08-11' })
+    expect((await db.equipment.get(result.newId))?.name).toBe('受水槽')
+  })
+
+  it('呼び名を入れ直せば、新しいほうはその名前になる（前の行は変えない）', async () => {
+    const id = await createEquipment({
+      kind: 'other', name: '受水槽', installedOn: '2004-04', lifeYears: 22,
+    })
+    const result = await replaceEquipment(id, { date: '2026-08-11', name: '受水槽（更新後）' })
+    expect((await db.equipment.get(result.newId))?.name).toBe('受水槽（更新後）')
+    expect((await db.equipment.get(id))?.name).toBe('受水槽')
+  })
+
+  it('③に残る記録の名前も、呼び名のほうを使う', async () => {
+    const id = await createEquipment({
+      kind: 'other', name: '高架水槽のポンプ', installedOn: '2010-04', lifeYears: 15,
+    })
+    await replaceEquipment(id, { date: '2026-08-11', amount: 250000 })
+    // 「その他の取り替え」では、あとから見て何のことか分からない
+    expect((await db.expenses.toArray())[0].title).toBe('高架水槽のポンプの取り替え')
+  })
+})
+
+describe('labelOf（呼び名）', () => {
+  it('名前が入っていれば、それを出す', () => {
+    expect(labelOf({ kind: 'other', name: '受水槽' })).toBe('受水槽')
+  })
+
+  it('名前が無ければ、種類の名前を出す', () => {
+    expect(labelOf({ kind: 'waterHeater' })).toBe('給湯器')
+    expect(labelOf({ kind: 'other' })).toBe('その他')
+  })
+
+  // 画面から空欄のまま保存されると '' が入りうる。空白だけのときも同じ
+  it('空や空白だけのときは、種類の名前に戻す', () => {
+    expect(labelOf({ kind: 'aircon', name: '' })).toBe('エアコン')
+    expect(labelOf({ kind: 'aircon', name: '   ' })).toBe('エアコン')
+  })
+
+  it('一覧の行にも、同じ呼び名が入っている', () => {
+    const rows = buildEquipmentRows({
+      equipment: [
+        equipment('a', '2004-04', { kind: 'other', name: '受水槽', lifeYears: 22 }),
+        equipment('b', '2015-09', {}),
+      ],
+      rooms: [],
+      on: '2026-08-12',
+    })
+    expect(rows.map((r) => r.label)).toStrictEqual(['受水槽', '給湯器'])
   })
 })

@@ -2,7 +2,7 @@ import { Link } from 'react-router-dom'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { Screen } from '../components/Screen'
 import { db } from '../db'
-import { ageText, ageInMonths, buildEquipmentRows, KIND_LABEL, replacedHistory } from '../lib/equipment'
+import { ageText, ageInMonths, buildEquipmentRows, labelOf, replacedHistory } from '../lib/equipment'
 import { formatDate } from '../lib/date'
 import s from './Equipment.module.css'
 
@@ -55,7 +55,7 @@ export default function Equipment() {
           >
             <div className={s.head}>
               <h2 className={s.title}>
-                {row.target} {KIND_LABEL[e.kind]}
+                {row.target} {row.label}
               </h2>
               <span className={s.age}>{row.ageText}</span>
             </div>
@@ -89,7 +89,7 @@ export default function Equipment() {
             {view.history.map(({ equipment: e, target, lasted }) => (
               <li key={e.id}>
                 <b>
-                  {target} {KIND_LABEL[e.kind]}
+                  {target} {labelOf(e)}
                 </b>
                 <span className={s.historyMeta}>
                   {formatDate(e.replacedOn ?? '')}に取り替え ・ {lasted}もった

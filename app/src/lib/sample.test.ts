@@ -96,7 +96,7 @@ describe('見本データ', () => {
     expect(await db.rooms.count()).toBe(10)
     // 1〜6月が9室ぶん、7月が8室ぶん、8月が6室ぶん
     expect(await db.payments.count()).toBe(9 * 6 + 8 + 6)
-    expect(await db.equipment.count()).toBe(7)
+    expect(await db.equipment.count()).toBe(8)
   })
 
   it('全部消すと空になる（設定の meta は残す）', async () => {

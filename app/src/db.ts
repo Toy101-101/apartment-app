@@ -169,6 +169,14 @@ export type EquipmentKind = 'waterHeater' | 'aircon' | 'other'
  */
 export interface Equipment extends BaseRow {
   kind: EquipmentKind
+  /**
+   * 何と呼んでいるか（'受水槽' '高架水槽のポンプ'）。
+   *
+   * 種類が「その他」のものが複数あると、一覧では**どれがどれだか見分けられない**。
+   * 入っていなければ種類の名前（給湯器・エアコン・その他）をそのまま出すので、
+   * 給湯器やエアコンでは空のままでよい。
+   */
+  name?: string
   /** どの部屋のものか。建物全体のもの（受水槽など）なら入れない */
   roomId?: string
   /** 設置した年月 'YYYY-MM'。日まで分かることは少ない */

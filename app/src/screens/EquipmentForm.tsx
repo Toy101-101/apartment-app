@@ -36,6 +36,7 @@ export default function EquipmentForm() {
   )
 
   const [kind, setKind] = useState<EquipmentKind>('waterHeater')
+  const [name, setName] = useState('')
   const [roomId, setRoomId] = useState('')
   const [installedOn, setInstalledOn] = useState(monthKey(new Date()))
   const [lifeYears, setLifeYears] = useState(DEFAULT_LIFE_YEARS.waterHeater)
@@ -64,6 +65,9 @@ export default function EquipmentForm() {
       setKind(row.kind)
       setRoomId(row.roomId ?? '')
       setLifeYears(row.lifeYears)
+      // 名前は「それが何であるか」なので、取り替えても変わらない。
+      // メーカーや型番と違って、取り替えのときも入れたまま見せる
+      setName(row.name ?? '')
       if (replacing) {
         // 取り替えでは、新しいものの中身を入れてもらう。前のものの年式は引き継がない
         setInstalledOn(monthKey(new Date()))
@@ -94,6 +98,7 @@ export default function EquipmentForm() {
     try {
       const input = {
         kind,
+        name,
         roomId: roomId || undefined,
         installedOn,
         lifeYears,
@@ -126,7 +131,7 @@ export default function EquipmentForm() {
         date: replacedOn,
         amount: yenAmount > 0 ? yenAmount : undefined,
         lifeYears,
-        maker, model, memo,
+        name, maker, model, memo,
       })
       navigate('/equipment')
     } catch {
@@ -180,6 +185,25 @@ export default function EquipmentForm() {
               </button>
             ))}
           </div>
+        )}
+      </Field>
+
+      {/* 「その他」が2つ以上あると、一覧では種類だけでは見分けられない。
+          空なら種類の名前をそのまま出すので、給湯器・エアコンでは触らなくてよい */}
+      <Field
+        label="呼び名"
+        hint={kind === 'other'
+          ? '「その他」は、受水槽とポンプのように並ぶと見分けがつきません。何と呼んでいるかを入れてください'
+          : '空のままで大丈夫です。同じ部屋に2台あるときだけ、区別する言い方を入れます'}
+      >
+        {(fieldId) => (
+          <input
+            id={fieldId}
+            type="text"
+            value={name}
+            placeholder={kind === 'other' ? '受水槽' : ''}
+            onChange={(e) => setName(e.target.value)}
+          />
         )}
       </Field>
 

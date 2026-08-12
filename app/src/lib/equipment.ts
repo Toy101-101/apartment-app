@@ -36,6 +36,20 @@ export const DEFAULT_LIFE_YEARS: Record<EquipmentKind, number> = {
   other: 10,
 }
 
+/**
+ * 一覧・履歴・③修繕への記録で使う呼び名。
+ *
+ * 名前が入っていればそれを、無ければ種類の名前を出す。
+ * 「その他」が受水槽とポンプの2つあると、種類の名前だけでは見分けられないため。
+ *
+ * **出す場所ごとに書き分けないこと。** ここを通しておけば、
+ * 一覧で「受水槽」と呼んでいるものが、③の記録では「その他の取り替え」になる、
+ * といった食いちがいが起きない。
+ */
+export function labelOf(e: { kind: EquipmentKind; name?: string }): string {
+  return e.name?.trim() || KIND_LABEL[e.kind]
+}
+
 // --- 計算だけ -------------------------------------------------------------
 
 const alive = <T extends { deletedAt?: string }>(row: T) => !row.deletedAt
@@ -80,6 +94,8 @@ export interface EquipmentRow {
   room?: Room
   /** '103号室' か '建物全体' */
   target: string
+  /** '給湯器' か、名前を入れてあれば '受水槽' */
+  label: string
   months: number
   ageText: string
   level: LifeLevel
@@ -104,6 +120,7 @@ export function buildEquipmentRows({
         equipment: e,
         room,
         target: room ? `${room.roomNo}号室` : '建物全体',
+        label: labelOf(e),
         months,
         ageText: ageText(months),
         level: levelOf(months, e.lifeYears),
@@ -135,6 +152,7 @@ export function replacedHistory(equipment: Equipment[]): Equipment[] {
 
 export interface EquipmentInput {
   kind: EquipmentKind
+  name?: string
   roomId?: string
   installedOn: string
   lifeYears: number
@@ -151,6 +169,7 @@ function trimmed(value: string | undefined): string | undefined {
 function fieldsOf(input: EquipmentInput) {
   return {
     kind: input.kind,
+    name: trimmed(input.name),
     roomId: trimmed(input.roomId),
     installedOn: input.installedOn,
     lifeYears: input.lifeYears,
@@ -200,6 +219,12 @@ export interface ReplaceResult {
  * `lifeYears` は、入れなければ前のものと同じにする。
  * 「前のが8年で壊れたから、次は長めに見ておく」と画面で直したときに、
  * その数字が黙って捨てられないよう、受け取れるようにしてある。
+ *
+ * **名前も、入れなければ前のものから引き継ぐ。**
+ * メーカーや型番は「その1台のもの」なので新しく入れ直すが、名前は
+ * 「それが何であるか」（受水槽・ポンプ）なので、中身を替えても変わらない。
+ * ここを引き継がないと、受水槽を替えたとたんに一覧が「その他」に戻り、
+ * どれがどれだか分からなくなる。
  */
 export async function replaceEquipment(
   id: string,
@@ -207,6 +232,7 @@ export async function replaceEquipment(
     date: string
     amount?: number
     lifeYears?: number
+    name?: string
     maker?: string
     model?: string
     memo?: string
@@ -224,6 +250,7 @@ export async function replaceEquipment(
     await db.equipment.put(compact({
       id: created, createdAt: at, updatedAt: at,
       kind: before.kind,
+      name: trimmed(done.name) ?? before.name,
       roomId: before.roomId,
       installedOn: monthOf(done.date),
       lifeYears: done.lifeYears && done.lifeYears > 0 ? done.lifeYears : before.lifeYears,
@@ -239,7 +266,8 @@ export async function replaceEquipment(
     result.expenseId = await createExpense({
       kind: 'repair',
       date: done.date,
-      title: `${KIND_LABEL[before.kind]}の取り替え`,
+      // 一覧で「受水槽」と呼んでいるものが、③では「その他の取り替え」になると追えない
+      title: `${labelOf(before)}の取り替え`,
       amount: done.amount,
       roomId: before.roomId,
       photoIds: [],

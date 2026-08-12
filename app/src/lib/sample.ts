@@ -218,9 +218,13 @@ const equipment: Equipment[] = [
     memo: '空室のうちに替える。この年式だと修理の部品がもう無い。' },
   { id: 'eq-3', ...base, kind: 'waterHeater', roomId: 'r-103', installedOn: '2015-09',
     lifeYears: 12, maker: '△△工業', model: 'GT-2050' },
-  { id: 'eq-4', ...base, kind: 'other', installedOn: '2004-04', lifeYears: 22,
-    maker: '受水槽（建物全体）',
+  // 「その他」を2件そろえてある。呼び名が無いと、一覧ではどちらも
+  // 「建物全体 その他」になって見分けがつかない。名前の欄が効く場面を見本でも見せる
+  { id: 'eq-4', ...base, kind: 'other', name: '受水槽', installedOn: '2004-04', lifeYears: 22,
     memo: '清掃は毎年している。取り替えとなると大きな工事になるので、早めに見積りを取る。' },
+  { id: 'eq-7', ...base, kind: 'other', name: '高架水槽のポンプ', installedOn: '2016-10',
+    lifeYears: 15, maker: '□□ポンプ',
+    memo: '止まると上の階の水が出なくなる。音が変わったら早めに見てもらう。' },
   { id: 'eq-5', ...base, kind: 'waterHeater', roomId: 'r-102', installedOn: '2026-07',
     lifeYears: 12, maker: '△△工業', model: 'GT-2060',
     memo: '2026年7月に新品へ交換。募集のときは「給湯器新品」と出す。' },
