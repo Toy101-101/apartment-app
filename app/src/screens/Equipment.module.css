@@ -45,6 +45,9 @@
   align-items: baseline;
   justify-content: space-between;
   gap: var(--sp-3);
+  /* 「101号室 給湯器」と「10年11か月」が横に並びきらないときは、
+     年数を下の行へ落とす。.age は縮まない指定なので、これが無いと画面の外へ出る */
+  flex-wrap: wrap;
 }
 .title {
   margin: 0;

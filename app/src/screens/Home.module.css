@@ -125,6 +125,15 @@
   flex-direction: column;
   justify-content: space-between;
   min-height: 150px;
+  /*
+   * 端末の文字を大きくしても2列のままにするため。
+   *
+   * grid の子は既定で「中身より狭くならない」ので、これが無いと
+   * 文字を200%にしたとき、タイルが画面の外へはみ出して横スクロールが出る。
+   * 0 にしておけば、幅は半分のままで文字のほうが折り返す（縦に伸びる）。
+   * 列数を画面幅で変える手もあるが、それだと大きい端末で3列になって2×2が崩れる。
+   */
+  min-width: 0;
   padding: var(--sp-4) var(--sp-3) var(--sp-3);
   border: none;
   border-radius: var(--radius);
@@ -145,12 +154,21 @@
   margin-top: var(--sp-1);
   /* 「入居者・契 約」のような不自然な折り返しを避ける */
   word-break: auto-phrase;
+  /*
+   * 上の auto-phrase で切れないほど文字が大きいときだけ効く逃げ道。
+   * 文字を200%にすると「入居者・契約」ひと続きでもタイルに収まらなくなり、
+   * これが無いと画面の外へ出る。ふだんは auto-phrase が先に働くので、
+   * 不自然な折り返しにはならない。
+   */
+  overflow-wrap: anywhere;
 }
 .tileSub {
   display: block;
   font-size: var(--fs-sub);
   margin-top: var(--sp-1);
   opacity: 0.95;
+  /* 「今月ぶん ¥367,000」が切れずに残ると、これも外へ出る（上と同じ理由） */
+  overflow-wrap: anywhere;
 }
 .t1 { background: var(--brand); }
 .t2 { background: var(--ok); }

@@ -158,7 +158,13 @@
   margin: var(--sp-2) 0 0;
   font-size: var(--fs-body);
   line-height: 1.9;
+  /* 音声入力や手入力の改行をそのまま残す */
   white-space: pre-wrap;
+  /*
+   * pre-wrap だけだと、切れ目の無い長いひと続き（電話番号や英数字のメモ）が
+   * 折り返されず、いきさつメモが画面の外へ出る。端末の文字を大きくすると起きやすい。
+   */
+  overflow-wrap: anywhere;
 }
 .noteDelete {
   min-height: var(--tap);

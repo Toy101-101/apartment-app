@@ -56,13 +56,23 @@
   border: var(--border) solid var(--line);
   border-radius: var(--radius);
   padding: var(--sp-3) var(--sp-4);
+  /* 端末の文字を大きくすると「入ったお金」と金額が横に並びきらない。
+     そのときは金額を下の行へ落とす（画面の外へ出すよりよい） */
+  flex-wrap: wrap;
 }
 .bigLabel {
   font-size: var(--fs-sub);
   font-weight: 800;
 }
 .bigNum {
-  font-size: var(--fs-huge);
+  /*
+   * この画面でいちばん大きい数字。ただし ¥4,153,000 は10文字あるので、
+   * 端末の文字を大きくすると、それだけで画面幅を超える。
+   * 金額を途中で折り返すと読めなくなるため、幅のほうで頭打ちにする。
+   * 9vw にしてあるのは、ふだんの文字サイズでは --fs-huge が勝って
+   * 見た目が変わらないため（幅360pxで 9vw ≒ 32px＝--fs-huge）。
+   */
+  font-size: min(var(--fs-huge), 9vw);
   font-weight: 800;
   line-height: 1.3;
 }
