@@ -31,55 +31,85 @@ export default function Home() {
   const month = thisMonth()
   const year = Number(month.slice(0, 4))
 
-  const view = useLiveQuery(async () => {
-    const [
-      rooms, leases, tenants, rentTerms, payments, expenses, schedules, equipment, sample, lastShare,
-    ] = await Promise.all([
+  /*
+   * 読み込みを3つに分けてある。
+   *
+   * ひとまとめにすると、`useLiveQuery` は「読んだ表のどれかが変わったら、また全部やり直す」
+   * ので、家賃を1件「済」にしただけで設備の替え時や見本の有無まで計算し直していた。
+   * 分けておけば、入金は notice と year だけ、設備を足したときは keep だけが動く。
+   *
+   * 分け方は画面の並びではなく「どの表を読むか」で決めている。
+   * 同じ表を読むものを一緒にしないと、分けた意味が無くなるため。
+   */
+
+  // ① 今日のこと。お知らせ枠と、①②④⑤の入口
+  const notice = useLiveQuery(async () => {
+    const [rooms, leases, tenants, rentTerms, payments, schedules, moveOuts, noticeDays] =
+      await Promise.all([
+        db.rooms.toArray(),
+        db.leases.toArray(),
+        db.tenants.toArray(),
+        db.rentTerms.toArray(),
+        // 必要なのは今月ぶんだけ。年ぶんを読むのは下の year のほう
+        db.payments.where('month').equals(month).toArray(),
+        db.schedules.toArray(),
+        db.moveOuts.toArray(),
+        readRenewalNoticeDays(),
+      ])
+    return {
+      money: summarize(buildMonthRows({ month, rooms, leases, tenants, rentTerms, payments })),
+      renewals: needsAttention(buildContractRows({ leases, rooms, tenants, rentTerms, noticeDays })),
+      moveOuts: pendingMoveOuts({ leases, rooms, tenants, moveOuts }),
+      due: schedulesDue(buildScheduleRows(schedules)),
+      scheduleCount: schedules.filter((s) => !s.deletedAt).length,
+      vacant: countStates(buildVacancyRows({ rooms, leases, tenants })).vacant,
+    }
+  }, [month])
+
+  // ② 年ぶんの集計。12か月ぶんを回すのでいちばん重い。入金か費用が変わったときだけ動かす
+  const yearly = useLiveQuery(async () => {
+    const [rooms, leases, rentTerms, payments, expenses, firstPaid] = await Promise.all([
       db.rooms.toArray(),
       db.leases.toArray(),
-      db.tenants.toArray(),
       db.rentTerms.toArray(),
-      // 今年ぶんをまとめて読む。②の集計は buildMonthRows が月で絞るので、これで足りる
       db.payments.where('month').between(`${year}-01`, `${year}-12`, true, true).toArray(),
       db.expenses.toArray(),
-      db.schedules.toArray(),
-      db.equipment.toArray(),
-      hasSampleData(),
-      db.meta.get('lastShareAt'),
-    ])
-    const [noticeDays, moveOuts, firstPaid] = await Promise.all([
-      readRenewalNoticeDays(),
-      db.moveOuts.toArray(),
       // 「いつから記録を付けはじめたか」。ここで読む入金は今年ぶんだけなので、
       // buildYear に任せると「今年の最初の入金」を付けはじめた月と取りちがえ、
       // 年ごとのまとめの画面と数字が食いちがう。月の索引で1件だけ引いて渡す
       db.payments.orderBy('month').filter((p) => !p.deletedAt).first(),
     ])
-    const equipmentRows = buildEquipmentRows({ equipment, rooms })
     return {
-      due: schedulesDue(buildScheduleRows(schedules)),
-      moveOuts: pendingMoveOuts({ leases, rooms, tenants, moveOuts }),
-      scheduleCount: schedules.filter((s) => !s.deletedAt).length,
-      equipmentCount: equipmentRows.length,
-      equipmentSoon: equipmentDue(equipmentRows).length,
-      equipmentOver: equipmentOverdue(equipmentRows).length,
-      money: summarize(buildMonthRows({ month, rooms, leases, tenants, rentTerms, payments })),
-      renewals: needsAttention(buildContractRows({ leases, rooms, tenants, rentTerms, noticeDays })),
-      expenses: expenses.filter((e) => !e.deletedAt).length,
-      vacant: countStates(buildVacancyRows({ rooms, leases, tenants })).vacant,
-      yearNet: buildYear({
+      net: buildYear({
         year, rooms, leases, rentTerms, payments, expenses, from: firstPaid?.month,
       }).net,
+      expenseCount: expenses.filter((e) => !e.deletedAt).length,
+    }
+  }, [year])
+
+  // ③ めったに変わらないもの。⑥設備・控えを送った日・見本が入っているか
+  const keep = useLiveQuery(async () => {
+    const [equipment, rooms, sample, lastShare] = await Promise.all([
+      db.equipment.toArray(),
+      db.rooms.toArray(),
+      hasSampleData(),
+      db.meta.get('lastShareAt'),
+    ])
+    const rows = buildEquipmentRows({ equipment, rooms })
+    return {
+      equipmentCount: rows.length,
+      equipmentSoon: equipmentDue(rows).length,
+      equipmentOver: equipmentOverdue(rows).length,
       lastShareAt: lastShare?.value,
       sample,
     }
-  }, [month, year])
+  }, [])
 
-  const unpaid = view?.money.unpaid ?? []
-  const renewals = view?.renewals ?? []
-  const due = view?.due ?? []
-  const moving = view?.moveOuts ?? []
-  const calm = view
+  const unpaid = notice?.money.unpaid ?? []
+  const renewals = notice?.renewals ?? []
+  const due = notice?.due ?? []
+  const moving = notice?.moveOuts ?? []
+  const calm = notice
     && unpaid.length === 0 && renewals.length === 0 && due.length === 0 && moving.length === 0
 
   return (
@@ -89,10 +119,10 @@ export default function Home() {
       </header>
 
       <main className={s.body}>
-        <section className={`${s.notice} ${calm || !view ? '' : s.noticeWarn}`}>
+        <section className={`${s.notice} ${calm || !notice ? '' : s.noticeWarn}`}>
           <p className={s.noticeHead}>{formatDate(today())}</p>
 
-          {!view && <p className={s.noticeCalm}>読み込んでいます…</p>}
+          {!notice && <p className={s.noticeCalm}>読み込んでいます…</p>}
           {calm && <p className={s.noticeCalm}>今日は、急いですることはありません</p>}
 
           {unpaid.length > 0 && (
@@ -161,7 +191,7 @@ export default function Home() {
             <span>
               <span className={s.tileName}>入居者・契約</span>
               <span className={s.tileSub}>
-                {view ? `${view.money.occupied}件` : '…'}
+                {notice ? `${notice.money.occupied}件` : '…'}
               </span>
             </span>
           </Link>
@@ -170,9 +200,9 @@ export default function Home() {
             <span>
               <span className={s.tileName}>家賃の入金</span>
               <span className={s.tileSub}>
-                {view
+                {notice
                   ? unpaid.length === 0
-                    ? `今月ぶん ${yen(view.money.received)}`
+                    ? `今月ぶん ${yen(notice.money.received)}`
                     : `まだ ${unpaid.length}件`
                   : '…'}
               </span>
@@ -183,7 +213,7 @@ export default function Home() {
             <span>
               <span className={s.tileName}>修繕・費用</span>
               <span className={s.tileSub}>
-                {view ? `${view.expenses}件` : '…'}
+                {yearly ? `${yearly.expenseCount}件` : '…'}
               </span>
             </span>
           </Link>
@@ -192,10 +222,10 @@ export default function Home() {
             <span>
               <span className={s.tileName}>空室の状況</span>
               <span className={s.tileSub}>
-                {view
-                  ? view.vacant === 0
+                {notice
+                  ? notice.vacant === 0
                     ? 'すべて入居中'
-                    : `空室 ${view.vacant}室`
+                    : `空室 ${notice.vacant}室`
                   : '…'}
               </span>
             </span>
@@ -205,12 +235,12 @@ export default function Home() {
         <Link className={s.keep} to="/schedules">
           <span className={s.keepName}>⑤ 年間の予定（保険・税金・点検）</span>
           <span className={s.keepSub}>
-            {view
-              ? view.scheduleCount === 0
+            {notice
+              ? notice.scheduleCount === 0
                 ? 'まだ登録がありません'
                 : due.length > 0
-                  ? `${view.scheduleCount}件のうち、${due.length}件が近づいています`
-                  : `${view.scheduleCount}件を見ています`
+                  ? `${notice.scheduleCount}件のうち、${due.length}件が近づいています`
+                  : `${notice.scheduleCount}件を見ています`
               : '…'}
           </span>
         </Link>
@@ -218,19 +248,19 @@ export default function Home() {
         {/* 給湯器の替え時は「今日、急いですること」ではないので、上のお知らせ枠には出さない。
             そのかわり、替え時が来ていたら入口の色を変えて気づけるようにする */}
         <Link
-          className={`${s.keep} ${view && view.equipmentOver > 0 ? s.keepWarn : ''}`}
+          className={`${s.keep} ${keep && keep.equipmentOver > 0 ? s.keepWarn : ''}`}
           to="/equipment"
         >
           <span className={s.keepName}>⑥ 設備の年式（給湯器・エアコン）</span>
           <span className={s.keepSub}>
-            {view
-              ? view.equipmentCount === 0
+            {keep
+              ? keep.equipmentCount === 0
                 ? 'まだ登録がありません'
-                : view.equipmentOver > 0
-                  ? `${view.equipmentOver}台が替え時を過ぎています`
-                  : view.equipmentSoon > 0
-                    ? `${view.equipmentSoon}台が、そろそろ替え時です`
-                    : `${view.equipmentCount}台を見ています`
+                : keep.equipmentOver > 0
+                  ? `${keep.equipmentOver}台が替え時を過ぎています`
+                  : keep.equipmentSoon > 0
+                    ? `${keep.equipmentSoon}台が、そろそろ替え時です`
+                    : `${keep.equipmentCount}台を見ています`
               : '…'}
           </span>
         </Link>
@@ -238,8 +268,8 @@ export default function Home() {
         <Link className={s.keep} to="/yearly">
           <span className={s.keepName}>年ごとのまとめ</span>
           <span className={s.keepSub}>
-            {view
-              ? `${formatYear(year)}分は、いまのところ ${yen(view.yearNet)}`
+            {yearly
+              ? `${formatYear(year)}分は、いまのところ ${yen(yearly.net)}`
               : '確定申告のときに使います'}
           </span>
         </Link>
@@ -247,8 +277,8 @@ export default function Home() {
         <Link className={s.keep} to="/backup">
           <span className={s.keepName}>控えを家族に送る・印刷する</span>
           <span className={s.keepSub}>
-            {view?.lastShareAt
-              ? `最後に送ったのは ${formatDate(view.lastShareAt)}`
+            {keep?.lastShareAt
+              ? `最後に送ったのは ${formatDate(keep.lastShareAt)}`
               : 'まだ一度も送っていません'}
           </span>
         </Link>
@@ -260,7 +290,7 @@ export default function Home() {
 
         {/* 見本を入れた端末にだけ出る。消せば二度と出ない。
             見本モード（?demo=1）では中身が全部見本なので出さない（帯のボタンでやり直せる） */}
-        {!IS_DEMO && view?.sample && (
+        {!IS_DEMO && keep?.sample && (
           <section className={s.sample}>
             <h2 className={s.sampleTitle}>いま入っているのは見本です</h2>
             <p className={s.sampleNote}>

@@ -70,8 +70,18 @@ export type RenewalLevel = 'red' | 'yellow' | 'none'
 /** 残りこれを切ったら赤（設定の日数のほうが短ければ、そちらを使う） */
 export const URGENT_DAYS = 30
 
+/**
+ * 知らせ始める日数の既定（v1からの動き。設定を触らなければ、これまでと同じ）。
+ *
+ * 置き場をここにしてあるのは、`settings.ts` が `db` を読むため。
+ * この `rent.ts` は計算だけで DB に触らない決まりなので、逆に取り込むことはできない。
+ * 設定の側（`settings.ts`）が、ここから受け取って使い回す。
+ * **60 という数字を、これ以外の場所に書かないこと。**
+ */
+export const DEFAULT_RENEWAL_NOTICE_DAYS = 60
+
 export function renewalLevel(
-  endDate: string, from?: string, noticeDays = 60,
+  endDate: string, from?: string, noticeDays = DEFAULT_RENEWAL_NOTICE_DAYS,
 ): { level: RenewalLevel; days: number } {
   const days = daysUntil(endDate, from)
   if (days <= Math.min(URGENT_DAYS, noticeDays)) return { level: 'red', days }

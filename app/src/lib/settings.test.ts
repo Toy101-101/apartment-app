@@ -133,4 +133,14 @@ describe('renewalLevel と設定', () => {
     expect(r.level).toBe('red')
     expect(r.days).toBe(-10)
   })
+
+  // 既定値の置き場は1つ。ここが外れたら、設定を変えても片方だけ古い日数で動く
+  it('渡さなかったときの日数は、設定の既定値と必ず同じ', () => {
+    // あと50日（30日前と60日前で分かれる）と、あと75日（60日前と90日前で分かれる）。
+    // この2つで見れば、選べる3つのどれにずれても気づける
+    for (const endDate of ['2026-09-30', '2026-10-25']) {
+      expect(renewalLevel(endDate, '2026-08-11').level)
+        .toBe(renewalLevel(endDate, '2026-08-11', DEFAULT_RENEWAL_NOTICE_DAYS).level)
+    }
+  })
 })

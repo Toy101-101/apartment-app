@@ -51,23 +51,53 @@
 
 ---
 
-## 残っているもの（整理系6件・未着手）
+## 整理系の判断（2026-08-12 ユーザー決定）
 
-急ぎではない。どれをやるかは相談のうえ決める。
+**やる: 10番・14番のみ。** 残り（9・12・13）は当面やらない。
+11番は14番の作り直しで自然に消えた。
+
+---
+
+## 直した（整理系・2026-08-12）
+
+### 10. 「60日前」の既定値が2か所にあった ✅
+数字の置き場を `rent.ts` の `DEFAULT_RENEWAL_NOTICE_DAYS` 1つにした。
+`settings.ts` はそこから受け取って再び出すだけ（読む側の書きかたは変えていない）。
+
+向きが `settings.ts` → `rent.ts` なのは、`rent.ts` が「DBに触らない計算だけ」だから。
+逆にすると計算のテストに Dexie が付いてくる。
+
+`settings.test.ts` に、**省略したときの日数が既定値と食いちがったら落ちる**試験を足した。
+残り50日と残り75日の2つで見ているので、30／60／90 のどれにずれても気づける。
+
+※ 画面の不具合は無かった。`renewalLevel` を省略で呼んでいるのは `ContractDetail.tsx:73` だけで、
+そこは `days`（残り日数）しか使っておらず、設定の日数に左右されない。
+
+### 11. ホームの2つ目の `Promise.all` ✅（14番のついでに解消）
+読み込みを3つに分けたとき、それぞれが1段の `Promise.all` になった。
+
+### 14. ホームが書き込みのたびに6つの派生を作り直す ✅
+`useLiveQuery` を1つ→3つに分けた。分け方は画面の並びではなく**どの表を読むか**。
+
+| | 読む表 | 出すもの |
+|---|---|---|
+| `notice` | rooms / leases / tenants / rentTerms / payments（**今月ぶんだけ**）/ schedules / moveOuts / meta | お知らせ枠、①②④⑤の入口 |
+| `yearly` | rooms / leases / rentTerms / payments（年ぶん）/ expenses | 年ごとの差引、③の件数 |
+| `keep` | equipment / rooms / meta | ⑥の入口、控えを送った日、見本の有無 |
+
+これで、設備を1台足しても年ぶんの集計（`buildMonthRows` が12回）は走らない。
+`notice` が読む入金を**今年ぶん→今月ぶん**に絞れたのも、分けた効き目。
+
+10部屋では**速さは体感で変わらない**。効くのは、書き込みのたびに全部を作り直す形をやめたこと。
+
+---
+
+## 残っているもの（やらないと決めた3件）
 
 ### 9. `readSettings` 系が使われていない重複
 `app/src/lib/settings.ts:43`
 `readSettings` / `Settings` / `DEFAULT_SETTINGS` は `settings.test.ts` からしか呼ばれていない。
 画面はすべて `readRenewalNoticeDays` を使っていて、同じ meta キーを別経路で読んでいる。
-
-### 10. 「60日前」の既定値が2か所にある
-`app/src/lib/rent.ts:74`
-`renewalLevel` が `noticeDays = 60` を直書き、`settings.ts` にも `DEFAULT_RENEWAL_NOTICE_DAYS = 60`。
-繋がりが無いので片方だけ変わりうる。
-
-### 11. ホームの2つ目の `Promise.all` が無駄な往復
-`app/src/screens/Home.tsx:49`
-`readRenewalNoticeDays()` などを1つ目の解決後に待っているが、依存関係が無い。
 
 ### 12. 履歴の計算が画面側にある
 `app/src/screens/Equipment.tsx:27`
@@ -80,12 +110,9 @@
 Equipment / EquipmentForm / MoveOut に複写。`Backup.module.css` に既にあるものと同じ。
 ※ `ConfirmDelete` を作ったぶん、`.remove` の複製は2か所ぶん減った。
 
-### 14. ホームが書き込みのたびに6つの派生を作り直す
-`app/src/screens/Home.tsx:33`
-`useLiveQuery` が10テーブルを読み、`buildContractRows` / `buildVacancyRows` /
-`buildScheduleRows` / `buildEquipmentRows` / `pendingMoveOuts` /
-`buildYear`（内部で `buildMonthRows` を12回）を実行。
-対象テーブルのどれかが変わるたび全部走る。
+---
+
+## 機能の追加として持ち越し
 
 ### 15. ⑥ に名前の欄が無い（2回目のレビューで判明）
 `app/src/db.ts` の `Equipment`

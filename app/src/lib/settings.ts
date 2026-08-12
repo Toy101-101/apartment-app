@@ -1,4 +1,5 @@
 import { db, getMeta, setMeta } from '../db'
+import { DEFAULT_RENEWAL_NOTICE_DAYS } from './rent'
 
 /**
  * 設定
@@ -21,8 +22,13 @@ export const RENEWAL_NOTICE_KEY = 'renewalNoticeDays'
 /** 選べる日数。増やすときは、ここと画面の両方に足す */
 export const RENEWAL_NOTICE_CHOICES = [30, 60, 90] as const
 
-/** 既定は60日前（v1からの動き。設定を触らなければ、これまでと同じ） */
-export const DEFAULT_RENEWAL_NOTICE_DAYS = 60
+/**
+ * 既定は60日前（v1からの動き。設定を触らなければ、これまでと同じ）。
+ *
+ * 数字そのものは `rent.ts` が持っている。`renewalLevel` の「省略したとき」と
+ * ここが別々に 60 と書いてあると、片方だけ変えたときに食いちがうため。
+ */
+export { DEFAULT_RENEWAL_NOTICE_DAYS }
 
 export interface Settings {
   renewalNoticeDays: number
